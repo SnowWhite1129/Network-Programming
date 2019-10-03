@@ -1,3 +1,6 @@
+# No pdf
+*.pdf
+
 # Prerequisites
 *.d
 
