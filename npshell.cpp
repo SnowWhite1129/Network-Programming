@@ -1,10 +1,10 @@
-// C Program to design a shell in Linux 
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/wait.h>
+#include<vector>
 
 #define MAXCOM 1000 // max number of letters to be supported 
 #define MAXLIST 100 // max number of commands to be supported 
@@ -31,12 +31,52 @@ int takeInput(char* str){
     }
 }
 
+void printenv(const char name[]){
+	char directory[100];
+	getcwd(directory, sizeof(directory));
+
+	char *r = strdup(getenv(name));
+	// check for errors
+	
+	//printf("%s\n", r);
+	
+	char *tok = r, *end = r;
+	while (tok != NULL) {
+    		strsep(&end, ":");
+		if(strcmp(tok, directory)==0){
+			printf(".");
+		}else{
+			printf("%s %s\n", directory, tok);
+			for(int i=strlen(directory);i<strlen(tok);++i){
+				printf("%c", tok[i]);
+			}
+		}
+    		tok = end;
+	}
+	free(r);
+}
+bool Init(){
+	char buf[1000];
+	getcwd(buf, sizeof(buf));
+	strcat(buf, "/bin");
+	return setenv("PATH", buf, true);
+}
 
 // Function where the system command is executed 
 void execArgs(char** parsed)
 {
     if(strcmp(parsed[0], "exit")==0){
         exit(0);
+    }else if (strcmp(parsed[0], "setenv")==0){
+	if(!setenv(parsed[1], parsed[2], true)){
+		printf("Set env Error\n");
+		exit(0);	
+	}
+	return;
+
+    }else if(strcmp(parsed[0], "printenv")==0){
+    	printenv(parsed[1]);
+	return;
     }
     // Forking a child 
     pid_t pid = fork();
@@ -47,6 +87,7 @@ void execArgs(char** parsed)
     } else if (pid == 0) {
         if (execvp(parsed[0], parsed) < 0) {
             printf("Unknown command: [%s].\n", parsed[0]);
+	    
         }
         exit(0);
     } else {
@@ -111,6 +152,7 @@ void execArgsPiped(char** parsed, char** parsedpipe)
     }
 }
 
+// It's assumption is only contain one pipe
 // function for finding pipe 
 int parsePipe(char* str, char** strpiped)
 {
@@ -135,7 +177,7 @@ void parseSpace(char* str, char** parsed){
     for (i = 0; i < MAXLIST; i++) {
         parsed[i] = strsep(&str, " ");
 
-        if (parsed[i] == 0s)
+        if (parsed[i] == 0)
             break;
         if (strlen(parsed[i]) == 0)
             i--;
@@ -163,6 +205,10 @@ int main(){
     char inputString[MAXCOM], *parsedArgs[MAXLIST];
     char* parsedArgsPiped[MAXLIST];
     int execFlag = 0;
+    if(Init()){
+	printf("Init error\n");
+	exit(0);
+    }
 
     while (true) {
         // print shell line 
