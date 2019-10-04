@@ -11,18 +11,22 @@
 #define MAXBUFFERSIZE 1000
 
 // Function to take input 
-int takeInput(char* str)
-{
+int takeInput(char* str){
     char* buf = (char *)malloc(sizeof(char)* MAXBUFFERSIZE);
 
+    if(!buf){
+    	printf("Malloc error.\n");
+    	return 0;
+    }
     buf = fgets(buf, MAXBUFFERSIZE, stdin);
     int len = strlen(buf);
-    if (len != 0) {
+    if (len > 1) {
         buf[len-1] = '\0';
         strcpy(str, buf);
         free(buf);
         return 0;
     } else {
+    	free(buf);
         return 1;
     }
 }
@@ -47,7 +51,7 @@ void execArgs(char** parsed)
         exit(0);
     } else {
         // waiting for child to terminate 
-        wait(nullptr);
+        wait(0);
         return;
     }
 }
@@ -96,13 +100,13 @@ void execArgsPiped(char** parsed, char** parsedpipe)
             dup2(pipefd[0], STDIN_FILENO);
             close(pipefd[0]);
             if (execvp(parsedpipe[0], parsedpipe) < 0) {
-                printf("Could not execute command [%s].", parsedpipe[0]);
+                printf("Could not execute command [%s].\n", parsedpipe[0]);
                 exit(0);
             }
         } else {
             // parent executing, waiting for two children 
-            wait(nullptr);
-            wait(nullptr);
+            wait(0);
+            wait(0);
         }
     }
 }
@@ -113,11 +117,11 @@ int parsePipe(char* str, char** strpiped)
     int i;
     for (i = 0; i < 2; i++) {
         strpiped[i] = strsep(&str, "|");
-        if (strpiped[i] == nullptr)
+        if (strpiped[i] == 0)
             break;
     }
 
-    if (strpiped[1] == nullptr)
+    if (strpiped[1] == 0)
         return 0; // returns zero if no pipe is found. 
     else {
         return 1;
@@ -125,23 +129,20 @@ int parsePipe(char* str, char** strpiped)
 }
 
 // function for parsing command words 
-void parseSpace(char* str, char** parsed)
-{
+void parseSpace(char* str, char** parsed){
     int i;
 
     for (i = 0; i < MAXLIST; i++) {
         parsed[i] = strsep(&str, " ");
 
-        if (parsed[i] == nullptr )
+        if (parsed[i] == 0s)
             break;
         if (strlen(parsed[i]) == 0)
             i--;
     }
 }
 
-int processString(char* str, char** parsed, char** parsedpipe)
-{
-
+int processString(char* str, char** parsed, char** parsedpipe){
     char* strpiped[2];
     int piped = 0;
 
@@ -158,8 +159,7 @@ int processString(char* str, char** parsed, char** parsedpipe)
     return 1 + piped;
 }
 
-int main()
-{
+int main(){
     char inputString[MAXCOM], *parsedArgs[MAXLIST];
     char* parsedArgsPiped[MAXLIST];
     int execFlag = 0;
