@@ -5,6 +5,8 @@
 #include<sys/types.h>
 #include<sys/wait.h>
 #include<vector>
+#include<iostream>
+using namespace std;
 
 #define MAXCOM 1000 // max number of letters to be supported 
 #define MAXLIST 100 // max number of commands to be supported 
@@ -15,7 +17,7 @@ int takeInput(char* str){
     char* buf = (char *)malloc(sizeof(char)* MAXBUFFERSIZE);
 
     if(!buf){
-    	printf("Malloc error.\n");
+    	cout << "Malloc error." << endl;
     	return 0;
     }
     buf = fgets(buf, MAXBUFFERSIZE, stdin);
@@ -32,34 +34,10 @@ int takeInput(char* str){
 }
 
 void printenv(const char name[]){
-	char directory[100];
-	getcwd(directory, sizeof(directory));
-
-	char *r = strdup(getenv(name));
-	// check for errors
-	
-	//printf("%s\n", r);
-	
-	char *tok = r, *end = r;
-	while (tok != NULL) {
-    		strsep(&end, ":");
-		if(strcmp(tok, directory)==0){
-			printf(".");
-		}else{
-			printf("%s %s\n", directory, tok);
-			for(int i=strlen(directory);i<strlen(tok);++i){
-				printf("%c", tok[i]);
-			}
-		}
-    		tok = end;
-	}
-	free(r);
+	cout << getenv(name) << endl;
 }
 bool Init(){
-	char buf[1000];
-	getcwd(buf, sizeof(buf));
-	strcat(buf, "/bin");
-	return setenv("PATH", buf, true);
+	return setenv("PATH", "bin:.", true);
 }
 
 // Function where the system command is executed 
@@ -82,7 +60,7 @@ void execArgs(char** parsed)
     pid_t pid = fork();
 
     if (pid == -1) {
-        printf("Failed forking child..\n");
+        cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
         if (execvp(parsed[0], parsed) < 0) {
@@ -206,8 +184,8 @@ int main(){
     char* parsedArgsPiped[MAXLIST];
     int execFlag = 0;
     if(Init()){
-	printf("Init error\n");
-	exit(0);
+	    printf("Init error\n");
+	    exit(0);
     }
 
     while (true) {
