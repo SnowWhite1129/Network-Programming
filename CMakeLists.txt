@@ -3,4 +3,4 @@ project(Network_Programming)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(Network_Programming npshell.cpp npshell.h)
+add_executable(Network_Programming npshell.cpp npshell.h test.cpp)
