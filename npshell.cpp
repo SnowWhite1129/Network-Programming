@@ -11,6 +11,8 @@ using namespace std;
 #define MAXCOM 1000 // max number of letters to be supported 
 #define MAXLIST 100 // max number of commands to be supported 
 #define MAXBUFFERSIZE 1000
+#define READ_END 0
+#define WRITE_END 1
 
 // Function to take input 
 int takeInput(char* str){
@@ -95,9 +97,9 @@ void execArgsPiped(char** parsed, char** parsedpipe)
     if (p1 == 0) {
         // Child 1 executing.. 
         // It only needs to write at the write end 
-        close(pipefd[0]);
+	close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[1]);
+	close(pipefd[1]);
 
         if (execvp(parsed[0], parsed) < 0) {
             printf("Could not execute [%s].\n", parsed[0]);
@@ -123,10 +125,13 @@ void execArgsPiped(char** parsed, char** parsedpipe)
                 exit(0);
             }
         } else {
-            // parent executing, waiting for two children 
-            wait(0);
-            wait(0);
-        }
+            int status;
+            close(pipefd[READ_END]);
+	    close(pipefd[WRITE_END]);
+	    waitpid(p2, &status, 0);
+	    waitpid(-1, NULL, 0);
+	    return;
+	}
     }
 }
 
