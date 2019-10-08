@@ -8,13 +8,20 @@
 #include<iostream>
 using namespace std;
 
-#define MAXCOM 1000 // max number of letters to be supported 
-#define MAXLIST 100 // max number of commands to be supported 
-#define MAXBUFFERSIZE 1000
+#define MAXCOM 256
+#define MAXLIST 256
+#define MAXBUFFERSIZE 15000
 #define READ_END 0
 #define WRITE_END 1
 
 // Function to take input 
+
+struct command{
+	int n = 1;
+	int fd = -1;
+};
+
+
 int takeInput(char* str){
     char* buf = (char *)malloc(sizeof(char)* MAXBUFFERSIZE);
 
@@ -78,79 +85,82 @@ void execArgs(char** parsed)
 }
 
 // Function where the piped system commands is executed 
-void execArgsPiped(char** parsed, char** parsedpipe)
+void execArgsPiped(char** parsed, char** parsedpipe, int pipe_count)
 {
     // 0 is read end, 1 is write end 
-    int pipefd[2];
+    int fd[pipe_count][2], status;
     pid_t p1, p2;
 
-    if (pipe(pipefd) < 0) {
-        printf("Pipe could not be initialized\n");
-        return;
-    }
-    p1 = fork();
-    if (p1 < 0) {
-        printf("Could not fork\n");
-        return;
-    }
-
-    if (p1 == 0) {
-        // Child 1 executing.. 
-        // It only needs to write at the write end 
-	close(pipefd[0]);
-        dup2(pipefd[1], STDOUT_FILENO);
-	close(pipefd[1]);
-
-        if (execvp(parsed[0], parsed) < 0) {
-            printf("Could not execute [%s].\n", parsed[0]);
-            exit(0);
-        }
-    } else {
-        // Parent executing 
-        p2 = fork();
-
-        if (p2 < 0) {
-            printf("Could not fork\n");
-            return;
+        for(int i = 0;i < pipe_count;i++){
+            if (pipe(fd[i]) < 0) {
+        	printf("Pipe could not be initialized\n");
+        	return;
+	    }
         }
 
-        // Child 2 executing.. 
-        // It only needs to read at the read end 
-        if (p2 == 0) {
-            close(pipefd[1]);
-            dup2(pipefd[0], STDIN_FILENO);
-            close(pipefd[0]);
-            if (execvp(parsedpipe[0], parsedpipe) < 0) {
-                printf("Could not execute command [%s].\n", parsedpipe[0]);
+        for(int i = 0;i <= pipe_count;i++){
+            p1 = fork();
+	    if (p1 < 0) {
+        	printf("Could not fork\n");
+        	return;
+	    }
+
+            if(!p1){
+                if(i!=0){
+                    dup2(fd[i-1][0],0);
+                }
+
+                if(i!=pipe_count){
+                    dup2(fd[i][1],1);
+                }
+
+                for(int j = 0;j < pipe_count;j++){   
+                    close(fd[j][0]);
+                    close(fd[j][1]);
+                }
+
+                if (execvp(parsed[0], parsed) < 0) {
+            	    printf("Could not execute [%s].\n", parsed[0]);
+        	    exit(0);
+	        }
                 exit(0);
             }
-        } else {
-            int status;
-            close(pipefd[READ_END]);
-	    close(pipefd[WRITE_END]);
-	    waitpid(p2, &status, 0);
-	    waitpid(-1, NULL, 0);
-	    return;
-	}
-    }
+        }
+        for(int i = 0;i < pipe_count;i++){
+            close(fd[i][0]);
+            close(fd[i][1]);
+        }
+        waitpid(p1,&status,0);          
 }
 
 // It's assumption is only contain one pipe
 // function for finding pipe 
 int parsePipe(char* str, char** strpiped)
 {
-    int i;
-    for (i = 0; i < 2; i++) {
-        strpiped[i] = strsep(&str, "|");
-        if (strpiped[i] == 0)
-            break;
-    }
+    int i=0;
+    for(int j=0;str[j]!='\0' && i < MAXLIST;++j){
+	switch(str[j]){
+	case '|':
+		if(isdigit(str[j+1]))
+			cout << "number piped" << endl;//numberpipe	
+		strpiped[i] = strsep(&str, "|");
+		++i;
+		break;
+	case '!':
+		strpiped[i] = strsep(&str, "!");
+		++i;
+		break;
+	case '>':
+		strpiped[i] = strsep(&str, ">");
+		++i;
+		break;
+	}
+    }	
+    
+    for(int k=0; strpiped[k]!=0; ++k)
+	cout << strpiped[k] << endl;	
 
-    if (strpiped[1] == 0)
-        return 0; // returns zero if no pipe is found. 
-    else {
-        return 1;
-    }
+    return i;   
 }
 
 // function for parsing command words 
@@ -159,7 +169,7 @@ void parseSpace(char* str, char** parsed){
 
     for (i = 0; i < MAXLIST; i++) {
         parsed[i] = strsep(&str, " ");
-
+	
         if (parsed[i] == 0)
             break;
         if (strlen(parsed[i]) == 0)
@@ -168,7 +178,7 @@ void parseSpace(char* str, char** parsed){
 }
 
 int processString(char* str, char** parsed, char** parsedpipe){
-    char* strpiped[2];
+    char* strpiped[MAXLIST];
     int piped = 0;
 
     piped = parsePipe(str, strpiped);
@@ -188,6 +198,8 @@ int main(){
     char inputString[MAXCOM], *parsedArgs[MAXLIST];
     char* parsedArgsPiped[MAXLIST];
     int execFlag = 0;
+    command c[1000];
+    int n=0;
     if(Init()){
 	    printf("Init error\n");
 	    exit(0);
@@ -211,8 +223,8 @@ int main(){
         if (execFlag == 1)
             execArgs(parsedArgs);
 
-        if (execFlag == 2)
-            execArgsPiped(parsedArgs, parsedArgsPiped);
+        if (execFlag > 1)
+            execArgsPiped(parsedArgs, parsedArgsPiped, execFlag);
     }
     exit(0);
 } 
