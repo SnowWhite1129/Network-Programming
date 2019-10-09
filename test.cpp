@@ -1,219 +1,126 @@
-//#include<stdio.h>
-//#include<string.h>
-//#include<stdlib.h>
-//#include<unistd.h>
-//#include<sys/types.h>
-//#include<sys/wait.h>
-//#include<vector>
-//#include<iostream>
-//using namespace std;
-//
-//#define MAXCOM 1000 // max number of letters to be supported
-//#define MAXLIST 100 // max number of commands to be supported
-//#define MAXBUFFERSIZE 1000
-//
-//// Function to take input
-//int takeInput(char* str){
-//    char* buf = (char *)malloc(sizeof(char)* MAXBUFFERSIZE);
-//
-//    if(!buf){
-//        cout << "Malloc error." << endl;
-//        return 0;
-//    }
-//    buf = fgets(buf, MAXBUFFERSIZE, stdin);
-//    int len = strlen(buf);
-//    if (len > 1) {
-//        buf[len-1] = '\0';
-//        strcpy(str, buf);
-//        free(buf);
-//        return 0;
-//    } else {
-//        free(buf);
-//        return 1;
-//    }
-//}
-//
-//void printenv(const char name[]){
-//    cout << getenv(name) << endl;
-//}
-//bool Init(){
-//    return setenv("PATH", "bin:.", true);
-//}
-//
-//// Function where the system command is executed
-//void execArgs(char** parsed)
-//{
-//    if(strcmp(parsed[0], "exit")==0){
-//        exit(0);
-//    }else if (strcmp(parsed[0], "setenv")==0){
-//        if(!setenv(parsed[1], parsed[2], true)){
-//            printf("Set env Error\n");
-//            exit(0);
-//        }
-//        return;
-//
-//    }else if(strcmp(parsed[0], "printenv")==0){
-//        printenv(parsed[1]);
-//        return;
-//    }
-//    // Forking a child
-//    pid_t pid = fork();
-//
-//    if (pid == -1) {
-//        cout << "Failed forking child" << endl ;
-//        return;
-//    } else if (pid == 0) {
-//        if (execvp(parsed[0], parsed) < 0) {
-//            printf("Unknown command: [%s].\n", parsed[0]);
-//
-//        }
-//        exit(0);
-//    } else {
-//        // waiting for child to terminate
-//        wait(0);
-//        return;
-//    }
-//}
-//
-//// Function where the piped system commands is executed
-//void execArgsPiped(char** parsed, char** parsedpipe)
-//{
-//    // 0 is read end, 1 is write end
-//    int pipefd[2];
-//    pid_t p1, p2;
-//
-//    if (pipe(pipefd) < 0) {
-//        printf("Pipe could not be initialized\n");
-//        return;
-//    }
-//    p1 = fork();
-//    if (p1 < 0) {
-//        printf("Could not fork\n");
-//        return;
-//    }
-//
-//    if (p1 == 0) {
-//        // Child 1 executing..
-//        // It only needs to write at the write end
-//        close(pipefd[0]);
-//        dup2(pipefd[1], STDOUT_FILENO);
-//        close(pipefd[1]);
-//
-//        if (execvp(parsed[0], parsed) < 0) {
-//            printf("Could not execute [%s].\n", parsed[0]);
-//            exit(0);
-//        }
-//    } else {
-//        // Parent executing
-//        p2 = fork();
-//
-//        if (p2 < 0) {
-//            printf("Could not fork\n");
-//            return;
-//        }
-//
-//        // Child 2 executing..
-//        // It only needs to read at the read end
-//        if (p2 == 0) {
-//            close(pipefd[1]);
-//            dup2(pipefd[0], STDIN_FILENO);
-//            close(pipefd[0]);
-//            if (execvp(parsedpipe[0], parsedpipe) < 0) {
-//                printf("Could not execute command [%s].\n", parsedpipe[0]);
-//                exit(0);
-//            }
-//        } else {
-//            // parent executing, waiting for two children
-//            wait(0);
-//            wait(0);
-//        }
-//    }
-//}
-//
-//// It's assumption is only contain one pipe
-//// function for finding pipe
-//int parsePipe(char* str, char** strpiped)
-//{
-//    int i;
-//    for (i = 0; i < 2; i++) {
-//        strpiped[i] = strsep(&str, "|");
-//        cout << i << endl;
-//        cout << strpiped[i] << endl;
-//        cout << str << endl;
-//        if (strpiped[i] == 0){
-//            cout << "break" << endl;
-//            break;
-//        }
-//
-//    }
-//
-//    if (strpiped[1] == 0)
-//        return 0; // returns zero if no pipe is found.
-//    else {
-//        return 1;
-//    }
-//}
-//
-//// function for parsing command words
-//void parseSpace(char* str, char** parsed){
-//    int i;
-//
-//    for (i = 0; i < MAXLIST; i++) {
-//        parsed[i] = strsep(&str, " ");
-//
-//        if (parsed[i] == 0)
-//            break;
-//        if (strlen(parsed[i]) == 0)
-//            i--;
-//    }
-//}
-//
-//int processString(char* str, char** parsed, char** parsedpipe){
-//    char* strpiped[2];
-//    int piped = 0;
-//
-//    piped = parsePipe(str, strpiped);
-//
-//    if (piped) {
-//        parseSpace(strpiped[0], parsed);
-//        parseSpace(strpiped[1], parsedpipe);
-//
-//    } else {
-//        parseSpace(str, parsed);
-//    }
-//
-//    return 1 + piped;
-//}
-//
-//int main(){
-//    char inputString[MAXCOM], *parsedArgs[MAXLIST];
-//    char* parsedArgsPiped[MAXLIST];
-//    int execFlag = 0;
-//    if(Init()){
-//        printf("Init error\n");
-//        exit(0);
-//    }
-//
-//    while (true) {
-//        // print shell line
-//        printf("%% ");
-//        // take input
-//        if (takeInput(inputString))
-//            continue;
-//        // process
-//        execFlag = processString(inputString,
-//                                 parsedArgs, parsedArgsPiped);
-//        // execflag returns zero if there is no command
-//        // or it is a builtin command,
-//        // 1 if it is a simple command
-//        // 2 if it is including a pipe.
-//
-//        // execute
-//        if (execFlag == 1)
-//            execArgs(parsedArgs);
-//
-//        if (execFlag == 2)
-//            execArgsPiped(parsedArgs, parsedArgsPiped);
-//    }
-//    exit(0);
-//}
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+
+typedef int Pipe[2];
+
+/* exec_nth_command() and exec_pipe_command() are mutually recursive */
+static void exec_pipe_command(int ncmds, char ***cmds, Pipe output);
+
+/* With the standard output plumbing sorted, execute Nth command */
+static void exec_nth_command(int ncmds, char ***cmds)
+{
+    assert(ncmds >= 1);
+    if (ncmds > 1)
+    {
+        pid_t pid;
+        Pipe input;
+        if (pipe(input) != 0)
+            err_sysexit("Failed to create pipe");
+        if ((pid = fork()) < 0)
+            err_sysexit("Failed to fork");
+        if (pid == 0)
+        {
+            /* Child */
+            exec_pipe_command(ncmds-1, cmds, input);
+        }
+        /* Fix standard input to read end of pipe */
+        dup2(input[0], 0);
+        close(input[0]);
+        close(input[1]);
+    }
+    execvp(cmds[ncmds-1][0], cmds[ncmds-1]);
+    err_sysexit("Failed to exec %s", cmds[ncmds-1][0]);
+    /*NOTREACHED*/
+}
+
+/* Given pipe, plumb it to standard output, then execute Nth command */
+static void exec_pipe_command(int ncmds, char ***cmds, Pipe output)
+{
+    assert(ncmds >= 1);
+    /* Fix stdout to write end of pipe */
+    dup2(output[1], 1);
+    close(output[0]);
+    close(output[1]);
+    exec_nth_command(ncmds, cmds);
+}
+
+/* Execute the N commands in the pipeline */
+static void exec_pipeline(int ncmds, char ***cmds)
+{
+    assert(ncmds >= 1);
+    pid_t pid;
+    if ((pid = fork()) < 0)
+        err_syswarn("Failed to fork");
+    if (pid != 0)
+        return;
+    exec_nth_command(ncmds, cmds);
+}
+
+/* Collect dead children until there are none left */
+static void corpse_collector(void)
+{
+    pid_t parent = getpid();
+    pid_t corpse;
+    int   status;
+    while ((corpse = waitpid(0, &status, 0)) != -1)
+    {
+        fprintf(stderr, "%d: child %d status 0x%.4X\n",
+                (int)parent, (int)corpse, status);
+    }
+}
+
+/*  who | awk '{print $1}' | sort | uniq -c | sort -n */
+static char *cmd0[] = { "who",                0 };
+static char *cmd1[] = { "awk",  "{print $1}", 0 };
+static char *cmd2[] = { "sort",               0 };
+static char *cmd3[] = { "uniq", "-c",         0 };
+static char *cmd4[] = { "sort", "-n",         0 };
+
+static char **cmds[] = { cmd0, cmd1, cmd2, cmd3, cmd4 };
+static int   ncmds = sizeof(cmds) / sizeof(cmds[0]);
+
+static void exec_arguments(int argc, char **argv)
+{
+    /* Split the command line into sequences of arguments */
+    /* Break at pipe symbols as arguments on their own */
+    char **cmdv[argc/2];            // Way too many
+    char  *args[argc+1];
+    int cmdn = 0;
+    int argn = 0;
+
+    cmdv[cmdn++] = &args[argn];
+    for (int i = 1; i < argc; i++)
+    {
+        char *arg = argv[i];
+        if (strcmp(arg, "|") == 0)
+        {
+            arg = 0;
+        }
+        args[argn++] = arg;
+        if (arg == 0)
+            cmdv[cmdn++] = &args[argn];
+    }
+    args[argn] = 0;
+    exec_pipeline(cmdn, cmdv);
+}
+
+int main(int argc, char **argv)
+{
+//    err_setarg0(argv[0]);
+    if (argc == 1)
+    {
+        /* Run the built in pipe-line */
+        exec_pipeline(ncmds, cmds); 
+    }
+    else
+    {
+        /* Run command line specified by user */
+        exec_arguments(argc, argv);
+    }
+    corpse_collector();
+    return(0);
+}

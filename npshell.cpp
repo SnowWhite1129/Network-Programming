@@ -7,6 +7,8 @@
 #include<iostream>
 #include "npshell.h"
 
+#define MAXLIST 1000
+
 #define READ_END 0
 #define WRITE_END 1
 
@@ -35,7 +37,7 @@ bool Init(){
 
 // Function where the system command is executed
 void execArgs(vector <string> &parsed)
-{
+{   
     char *args[MAXLIST];
     if(parsed.at(0)=="exit"){
         exit(0);
@@ -45,11 +47,11 @@ void execArgs(vector <string> &parsed)
 		exit(0);
 	}
 	return;
-
     }else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(0));
 	return;
     }
+	
     // Forking a child
     pid_t pid = fork();
 
@@ -71,9 +73,13 @@ void execArgs(vector <string> &parsed)
         return;
     }
 }
-
+void argsFree(char **args){
+	for(int i=0;args[i]!=NULL;++i){
+	free(args[i]);
+	}
+}
 // Function where the piped system commands is executed
-void execArgsPiped(vector <string> parsed[MAXLIST], int pipe_count)
+void execArgsPiped(vector<vector <string> > &parsed, int pipe_count)
 {
     // 0 is read end, 1 is write end
     int fd[pipe_count][2], status;
@@ -93,13 +99,12 @@ void execArgsPiped(vector <string> parsed[MAXLIST], int pipe_count)
             cout << "Could not fork" << endl;
             return;
         }
-
+		
         if(i != 0)
             dup2(fd[i-1][0], 0);
 
         if(i != pipe_count)
             dup2(fd[i][1], 1);
-
 
         for(int j = 0;j < pipe_count;j++){
             close(fd[j][0]);
@@ -111,14 +116,19 @@ void execArgsPiped(vector <string> parsed[MAXLIST], int pipe_count)
 	args[parsed[i].size()] = NULL;
         if (execvp(parsed[i].at(0).c_str(), args) < 0) {
             cout << "Could not execute [" << parsed[i].at(0) << "]." << endl;
-            exit(0);
+            argsFree(args);
+	    exit(0);
         }
+	exit(0);
     }
     for(int i = 0;i < pipe_count;i++){
         close(fd[i][0]);
         close(fd[i][1]);
+	waitpid(p1, &status, 0);
     }
-    waitpid(p1, &status, 0);
+    //waitpid(p1, &status, 0);
+    argsFree(args);
+    return;
 }
 
 // It's assumption is only contain one pipe
@@ -159,33 +169,43 @@ int parsePipe(string &str, vector <string> &strpiped)
 }
 
 // function for parsing command words
-void parseSpace(string& input, vector <string> &parsed){
-    	
+void parseSpace(string& input, vector <string> &parsed){ 	
     string tmp = input;
     size_t pos = tmp.find(" ");
     while(pos!= string::npos){
+	
+	if(pos==0){
+	    tmp = tmp.substr(1);
+	    pos = tmp.find(" ");
+	    continue;
+	}
+	
 	parsed.push_back(tmp.substr(0,pos));
 	tmp = tmp.substr(pos+1);
 	pos = tmp.find(" ");
     }
+    parsed.push_back(tmp); 
 }
 
-int processString(string &str, vector <string> parsed[MAXLIST]){
+int processString(string &str, vector< vector <string> > &parsed){
     vector <string> strpiped;
     int piped = 0;
 
     piped = parsePipe(str, strpiped);
-         
+    
+//    cout << "piped" << piped << endl;
+     
     for (int i = 0; i < piped; ++i) {
-        parseSpace(strpiped.at(i), parsed[i]);
+	parsed.push_back(vector<string>());
+        parseSpace(strpiped.at(i), parsed.at(i));
     }
 
-    return 1 + piped;
+//    cout << "Size:" << parsed[0].size() << endl;
+    
+    return piped;
 }
 
 int main(){
-    vector <string> parsedArgs[MAXLIST];
-    string inputString;
     int execFlag = 0;
     int n=0;
     if(Init()){
@@ -194,6 +214,8 @@ int main(){
     }
 
     while (true) {
+	vector<vector <string> >parsedArgs;
+	string inputString;
         // print shell line
         printf("%% ");
         // take input
@@ -205,12 +227,17 @@ int main(){
         // or it is a builtin command,
         // 1 if it is a simple command
         // 2 if it is including a pipe.
-
+	for(int i=0; i<parsedArgs.size();++i){
+		for(int j=0;j<parsedArgs.at(i).size();++j){
+			cout << parsedArgs.at(i).at(j) << " ";
+		}
+		cout << endl;
+	}	
         // execute
         if (execFlag == 1)
             execArgs(parsedArgs[0]);
 
         if (execFlag > 1)
-            execArgsPiped(parsedArgs, execFlag);
+            execArgsPiped(parsedArgs, execFlag-1);
     }
 }
