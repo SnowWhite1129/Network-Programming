@@ -43,6 +43,26 @@ vector <command> check(){
     return tmp;
 }
 
+void dupinput(vector <command> &tmp){
+    if (!tmp.empty()){ //Looking for some command output for this command input
+        for (int i = 0; i < tmp.size(); ++i) {
+            dup2(tmp.at(i).fd, STDIN_FILENO);
+            if (tmp.at(i).errfd != -1)
+                dup2(tmp.at(i).errfd, STDERR_FILENO);
+        }
+    }
+}
+
+void dupclose(vector <command> &tmp){
+    if (!tmp.empty()){ //Looking for some command output for this command input
+        for (int i = 0; i < tmp.size(); ++i) {
+            close(tmp.at(i).fd);
+            if (tmp.at(i).errfd != -1)
+                close(tmp.at(i).errfd);
+        }
+    }
+}
+
 int takeInput(){
     string line;
     int num = 0;
@@ -62,12 +82,14 @@ int takeInput(){
         if (str[0] == '|'){
             if (str.length()>1){
                 symbol = numberpiped;
+                str = str.substr(1);
                 args.push_back(str);
             } else{
                 symbol = piped;
             }
         } else if (str[0] == '!'){
             symbol = numberexplamation;
+            str = str.substr(1);
             args.push_back(str);
         } else if (str[0] == '>'){
             symbol = redirectout;
@@ -127,6 +149,8 @@ void execArgs(vector <string> &parsed)
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
+        vector <command> tmp = check();
+        dupinput(tmp);
 	    for(int i=0; i<parsed.size();i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
@@ -134,6 +158,7 @@ void execArgs(vector <string> &parsed)
         if (execvp(parsed.at(0).c_str(), args) < 0) {
             cout << "Unknown command: [" << parsed.at(0) << "]." << endl;
         }
+        dupclose(tmp);
         argsFree(args);
         exit(0);
     } else {
@@ -161,15 +186,11 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 
     if (pid==0){
         vector <command> tmp = check();
-        if (!tmp.empty()){ //Looking for some command output for this command input
-            for (int i = 0; i < tmp.size(); ++i) {
-                dup2(tmp.at(i).fd, STDIN_FILENO);
-                if (tmp.at(i).errfd != -1)
-                    dup2(tmp.at(i).errfd, STDERR_FILENO);
-            }
-        }
+        dupinput(tmp);
         if (symbol == numberpiped || symbol == numberexplamation) {
             dup2(fd[WRITE_END], STDOUT_FILENO);
+            command tmp;
+            int n = stoi(parsed.at(parsed.size()-1));
             if (symbol == numberexplamation){
                 int errfd[2];
                 if (pipe(errfd) < 0) {
@@ -177,7 +198,11 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
                     return;
                 }
                 dup2(errfd[WRITE_END], STDERR_FILENO);
+                tmp.Init(n, fd[READ_END], errfd[READ_END], numberexplamation);
+            } else {
+                tmp.Init(n, fd[READ_END], -1, numberpiped);
             }
+            cmd.push_back(tmp);
         }
         if (symbol == redirectout){
             int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
@@ -189,6 +214,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 
         close(fd[READ_END]);
         close(fd[WRITE_END]);
+        dupclose(tmp);
 
         for(int i=0; i<parsed.size();i++){
             //cout << j;
@@ -198,7 +224,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 
         //cout << parsed.at(i).size() << endl;
         //cout << "HI " << parsed.at(i).at(0) << endl;
-        //args[parsed.at(i).size()] = NULL;
+        args[parsed.size()] = NULL;
 
         if (execvp(parsed.at(0).c_str(), args) < 0) {
             cout << "Could not execute [" << parsed.at(0) << "]." << endl;
@@ -221,5 +247,7 @@ int main(){
         printf("%% ");
         if (!takeInput())
             continue;
+        Count();
+        Pop();
     }
 }
