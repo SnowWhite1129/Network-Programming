@@ -14,10 +14,10 @@ struct command{
     void Init(int n, int fd, int errfd);
 };
 
-void command::Init(int n, int fd, int errfd) {
-    n = n;
-    fd = fd;
-    errfd = errfd;
+void command::Init(int n1, int fd1, int errfd1) {
+    n = n1;
+    fd = fd1;
+    errfd = errfd1;
 }
 
 int takeInput();
