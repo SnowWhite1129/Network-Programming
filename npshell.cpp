@@ -100,11 +100,15 @@ int takeInput(){
             symbol = normal;
         }
         execArgsPiped(args, symbol);
+        Count();
+        Pop();
         args.clear();
     }
 
     if (symbol == normal){
         execArgs(args);
+        Count();
+        Pop();
     }
     return true;
 }
@@ -124,8 +128,6 @@ void argsFree(char **args){
 // Function where the system command is executed
 void execArgs(vector <string> &parsed)
 {
-    int status;
-
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
@@ -141,12 +143,12 @@ void execArgs(vector <string> &parsed)
 
     // Forking a child
     pid_t pid = fork();
-
+    vector <command> tmp;
     if (pid == -1) {
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-        vector <command> tmp = check();
+        tmp = check();
         dupinput(tmp);
         char *args[MAXLIST];
 	    for(int i=0; i<parsed.size();i++){
@@ -156,12 +158,11 @@ void execArgs(vector <string> &parsed)
         if (execvp(parsed.at(0).c_str(), args) < 0) {
             cout << "Unknown command: [" << parsed.at(0) << "]." << endl;
         }
-        dupclose(tmp);
         argsFree(args);
-        Count();
-        Pop();
         exit(0);
     } else {
+        int status;
+        dupclose(tmp);
         waitpid(pid, &status, 0);
     }
 }
@@ -183,8 +184,9 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
+    vector <command> tmp;
     if (pid==0){
-        vector <command> tmp = check();
+        tmp = check();
         dupinput(tmp);
         if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
             dup2(fd[WRITE_END], STDOUT_FILENO);
@@ -213,10 +215,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             }
         }
 
-        close(fd[READ_END]);
-        close(fd[WRITE_END]);
-        dupclose(tmp);
-
         char *args[MAXLIST];
 
         int length;
@@ -239,10 +237,11 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             cout << "Could not execute [" << parsed.at(0) << "]." << endl;
             argsFree(args);
         }
-        Count();
-        Pop();
         exit(0);
     } else {
+        close(fd[READ_END]);
+        close(fd[WRITE_END]);
+        dupclose(tmp);
         waitpid(pid, &status, 0);
     }
 }
