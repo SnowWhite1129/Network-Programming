@@ -26,7 +26,7 @@ void Pop(){
     //Need to test
     vector <command>::iterator it;
     for (it = cmd.begin(); it!=cmd.end() ; ++it) {
-        if (it->n ==0){
+        if (it->n == -1){
             vector <command>::iterator tmp;
             tmp = it;
             cmd.erase(tmp);
@@ -37,7 +37,7 @@ void Pop(){
 vector <command> check(){
     vector <command> tmp;
     for (int i = 0; i < cmd.size(); ++i) {
-        if (cmd.at(i).n == 1)
+        if (cmd.at(i).n == 0)
             tmp.push_back(cmd.at(i));
     }
     return tmp;
@@ -126,7 +126,7 @@ void argsFree(char **args){
 void execArgs(vector <string> &parsed)
 {
     int status;
-    char *args[MAXLIST];
+
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
@@ -138,8 +138,6 @@ void execArgs(vector <string> &parsed)
     }else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(0));
 	    return;
-    }else if(parsed.at(0) == "flag"){
-        cout << "taka{how_can_you_know_my_flaggggggggg?}" << endl;
     }
 
     // Forking a child
@@ -151,6 +149,7 @@ void execArgs(vector <string> &parsed)
     } else if (pid == 0) {
         vector <command> tmp = check();
         dupinput(tmp);
+        char *args[MAXLIST];
 	    for(int i=0; i<parsed.size();i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
@@ -160,6 +159,8 @@ void execArgs(vector <string> &parsed)
         }
         dupclose(tmp);
         argsFree(args);
+        Count();
+        Pop();
         exit(0);
     } else {
         waitpid(pid, &status, 0);
@@ -171,7 +172,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 {
     int fd[2], status;
     pid_t pid;
-    char *args[MAXLIST];
 
     if (pipe(fd) < 0) {
         cout << "Pipe could not be initialized" << endl;
@@ -187,7 +187,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     if (pid==0){
         vector <command> tmp = check();
         dupinput(tmp);
-        if (symbol == numberpiped || symbol == numberexplamation) {
+        if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
             dup2(fd[WRITE_END], STDOUT_FILENO);
             command tmp;
             int n = stoi(parsed.at(parsed.size()-1));
@@ -199,8 +199,10 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
                 }
                 dup2(errfd[WRITE_END], STDERR_FILENO);
                 tmp.Init(n, fd[READ_END], errfd[READ_END], numberexplamation);
-            } else {
+            } else if (symbol == numberpiped){
                 tmp.Init(n, fd[READ_END], -1, numberpiped);
+            } else {
+                tmp.Init(1, fd[READ_END], -1, piped);
             }
             cmd.push_back(tmp);
         }
@@ -216,6 +218,8 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         close(fd[WRITE_END]);
         dupclose(tmp);
 
+        char *args[MAXLIST];
+
         for(int i=0; i<parsed.size();i++){
             //cout << j;
             args[i] = strdup(parsed.at(i).c_str());
@@ -230,11 +234,12 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             cout << "Could not execute [" << parsed.at(0) << "]." << endl;
             argsFree(args);
         }
+        Count();
+        Pop();
         exit(0);
+    } else {
+        waitpid(pid, &status, 0);
     }
-
-    waitpid(pid, &status, 0);
-    argsFree(args);
 }
 
 int main(){
@@ -247,7 +252,5 @@ int main(){
         printf("%% ");
         if (!takeInput())
             continue;
-        Count();
-        Pop();
     }
 }
