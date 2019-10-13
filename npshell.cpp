@@ -6,6 +6,7 @@
 #include<sys/types.h>
 #include<sys/wait.h>
 #include<iostream>
+#include <fcntl.h>
 #include "npshell.h"
 
 #define MAXLIST 1000
@@ -33,6 +34,14 @@ void Pop(){
     }
 }
 
+vector <command> check(){
+    vector <command> tmp;
+    for (int i = 0; i < cmd.size(); ++i) {
+        if (cmd.at(i).n == 1)
+            tmp.push_back(cmd.at(i));
+    }
+    return tmp;
+}
 
 int takeInput(){
     string line;
@@ -53,16 +62,20 @@ int takeInput(){
         if (str[0] == '|'){
             if (str.length()>1){
                 symbol = numberpiped;
+                args.push_back(str);
             } else{
                 symbol = piped;
             }
         } else if (str[0] == '!'){
             symbol = numberexplamation;
+            args.push_back(str);
         } else if (str[0] == '>'){
             symbol = redirectout;
+            continue;
         } else {
             args.push_back(str);
-            continue;
+            if (symbol != redirectout)
+                continue;
         }
         execArgsPiped(args, symbol);
         args.clear();
@@ -147,23 +160,32 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     }
 
     if (pid==0){
-        if (){
-            //Looking for some command output for this command input
-            dup2(fd[READ_END], STDIN_FILENO);
+        vector <command> tmp = check();
+        if (!tmp.empty()){ //Looking for some command output for this command input
+            for (int i = 0; i < tmp.size(); ++i) {
+                dup2(tmp.at(i).fd, STDIN_FILENO);
+                if (tmp.at(i).errfd != -1)
+                    dup2(tmp.at(i).errfd, STDERR_FILENO);
+            }
         }
-        if (symbol == piped){
-
-        }
-        if (symbol == numberpiped) {
+        if (symbol == numberpiped || symbol == numberexplamation) {
+            dup2(fd[WRITE_END], STDOUT_FILENO);
             if (symbol == numberexplamation){
-
+                int errfd[2];
+                if (pipe(errfd) < 0) {
+                    cout << "Pipe could not be initialized" << endl;
+                    return;
+                }
+                dup2(errfd[WRITE_END], STDERR_FILENO);
             }
         }
         if (symbol == redirectout){
-
+            int out = open(parsed.at(parsed.size()-1), O_RDWR|O_CREAT);
+            if (out == -1){
+                cout << "File open error." << endl;
+                return;
+            }
         }
-
-        dup2(fd[WRITE_END], STDOUT_FILENO);
 
         close(fd[READ_END]);
         close(fd[WRITE_END]);
@@ -184,9 +206,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         }
         exit(0);
     }
-
-    close(fd[READ_END]);
-    close(fd[WRITE_END]);
 
     waitpid(pid, &status, 0);
     argsFree(args);

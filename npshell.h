@@ -10,6 +10,7 @@ enum Symbol {piped, numberpiped, numberexplamation, redirectout, normal};
 struct command{
     int n;
     int fd;
+    int errfd;
     Symbol symbol;
 };
 
