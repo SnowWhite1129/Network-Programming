@@ -185,7 +185,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
-    vector <command> tmp= check();
+    vector <command> tmp = check();
     dupinput(tmp);
     if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
         dup2(fd[WRITE_END], STDOUT_FILENO);

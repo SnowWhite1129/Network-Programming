@@ -12,6 +12,8 @@ struct command{
     int fd;
     int errfd;
     void Init(int n, int fd, int errfd);
+    command();
+    ~command();
 };
 
 void command::Init(int n1, int fd1, int errfd1) {
