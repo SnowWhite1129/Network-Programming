@@ -95,9 +95,10 @@ int takeInput(){
             continue;
         } else {
             args.push_back(str);
-            if (symbol != redirectout)
+            if (symbol != redirectout) {
+                symbol = normal;
                 continue;
-            symbol = normal;
+            }
         }
         execArgsPiped(args, symbol);
         Count();
