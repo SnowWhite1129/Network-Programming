@@ -222,7 +222,13 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 
         char *args[MAXLIST];
 
-        for(int i=0; i<parsed.size();i++){
+        int length;
+        if (symbol == numberpiped || symbol == numberexplamation)
+            length = parsed.size()-1;
+        else
+            length = parsed.size();
+
+        for(int i=0; i<length;i++){
             //cout << j;
             args[i] = strdup(parsed.at(i).c_str());
             //cout << args[j] << endl;
@@ -230,7 +236,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 
         //cout << parsed.at(i).size() << endl;
         //cout << "HI " << parsed.at(i).at(0) << endl;
-        args[parsed.size()] = NULL;
+        args[length] = NULL;
 
         if (execvp(parsed.at(0).c_str(), args) < 0) {
             cout << "Could not execute [" << parsed.at(0) << "]." << endl;
