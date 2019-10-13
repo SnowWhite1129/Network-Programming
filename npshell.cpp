@@ -193,6 +193,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             int n;
             if (symbol != piped)
                 n = stoi(parsed.at(parsed.size()-1).c_str());
+            cout <<  "N: " << n << endl;
             if (symbol == numberexplamation){
                 int errfd[2];
                 if (pipe(errfd) < 0) {
@@ -229,13 +230,13 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             length = parsed.size();
 
         for(int i=0; i<length;i++){
-            //cout << j;
+            cout << i;
             args[i] = strdup(parsed.at(i).c_str());
-            //cout << args[j] << endl;
+            cout << args[i] << endl;
         }
 
-        //cout << parsed.at(i).size() << endl;
-        //cout << "HI " << parsed.at(i).at(0) << endl;
+        cout << length << endl;
+        cout << "HI " << parsed.at(0) << endl;
         args[length] = NULL;
 
         if (execvp(parsed.at(0).c_str(), args) < 0) {
