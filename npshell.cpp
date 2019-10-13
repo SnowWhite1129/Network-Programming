@@ -34,13 +34,12 @@ void Pop(){
     }
 }
 
-vector <command> check(){
-    vector <command> tmp;
+void check(vector <command> &tmp){
     for (int i = 0; i < cmd.size(); ++i) {
         if (cmd.at(i).n == 0)
             tmp.push_back(cmd.at(i));
     }
-    return tmp;
+    fprintf(stderr, "tmp: %d\n", tmp.size());
 }
 
 void dupinput(vector <command> &tmp){
@@ -106,6 +105,8 @@ int takeInput(){
         args.clear();
     }
 
+    fprintf(stderr, "Size: %d\n", args.size());
+
     if (symbol == normal){
         execArgs(args);
         Count();
@@ -128,7 +129,7 @@ void argsFree(char **args){
 }
 // Function where the system command is executed
 void execArgs(vector <string> &parsed)
-{
+{	
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
@@ -139,31 +140,33 @@ void execArgs(vector <string> &parsed)
         return;
     }else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(0));
-	    return;
+	return;
     }
 
     // Forking a child
     pid_t pid = fork();
     vector <command> tmp;
+    check(tmp);
     if (pid == -1) {
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-        tmp = check();
+	fprintf(stderr, "%d\n", tmp.size());
         dupinput(tmp);
+	dupclose(tmp);
         char *args[MAXLIST];
-	    for(int i=0; i<parsed.size();i++){
+	for(int i=0; i<parsed.size();i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
         args[parsed.size()] = NULL;
-        if (execvp(parsed.at(0).c_str(), args) < 0) {
-            cout << "Unknown command: [" << parsed.at(0) << "]." << endl;
+        if (execvp(args[0], args) < 0) {
+            cout << "Unknown command: [" << args[0] << "]." << endl;
         }
         argsFree(args);
         exit(0);
     } else {
+	    fprintf(stderr, "123213213213\n");
         int status;
-        dupclose(tmp);
         waitpid(pid, &status, 0);
     }
 }
@@ -179,8 +182,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
-    vector <command> tmp = check();
-    dupinput(tmp);
     if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
         dup2(fd[WRITE_END], STDOUT_FILENO);
         int n = 1, err = -1;
@@ -200,6 +201,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         tmpcmd.Init(n, fd[READ_END], err);
         cmd.push_back(tmpcmd);
     }
+    fprintf(stderr, "Hey");
     if (symbol == redirectout){
         int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
         if (out == -1){
@@ -213,8 +215,17 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         cout << "Could not fork" << endl;
         return;
     }
-
+    vector <command> tmp;
     if (pid==0){
+	check(tmp);
+	dupinput(tmp);
+	dupclose(tmp);
+	close(fd[READ_END]);
+        close(fd[WRITE_END]);
+	//if(symbol == stderr)
+	//close();
+	//close();	
+	    
         char *args[MAXLIST];
 
         int length;
@@ -224,24 +235,28 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             length = parsed.size();
 
         for(int i=0; i<length;i++){
-            cout << i;
+            fprintf(stderr, "%d ", i);
             args[i] = strdup(parsed.at(i).c_str());
-            cout << args[i] << endl;
+            fprintf(stderr, "%s " ,args[i]);
         }
 
-        cout << length << endl;
-        cout << "HI " << parsed.at(0) << endl;
+        fprintf(stderr, "%d", length);
+        fprintf(stderr, "HI %s\n", args[0]);
         args[length] = NULL;
 
-        if (execvp(parsed.at(0).c_str(), args) < 0) {
-            cout << "Could not execute [" << parsed.at(0) << "]." << endl;
+        if (execvp(args[0], args) < 0) {
+            cout << "Could not execute [" << args[0] << "]." << endl;
             argsFree(args);
         }
+	fprintf(stderr, "HI");
         exit(0);
     } else {
         close(fd[READ_END]);
         close(fd[WRITE_END]);
-        dupclose(tmp);
+	//if(symbol == number...)
+	//close(errfd[READ...]);
+	//close(errfd[WRI..]);	
+        //dupclose(tmp);
         waitpid(pid, &status, 0);
     }
 }
