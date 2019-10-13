@@ -190,7 +190,9 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
             dup2(fd[WRITE_END], STDOUT_FILENO);
             command tmp;
-            int n = stoi(parsed.at(parsed.size()-1));
+            int n;
+            if (symbol != piped)
+                n = stoi(parsed.at(parsed.size()-1).c_str());
             if (symbol == numberexplamation){
                 int errfd[2];
                 if (pipe(errfd) < 0) {
