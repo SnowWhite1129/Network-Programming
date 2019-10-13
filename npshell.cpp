@@ -180,7 +180,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             }
         }
         if (symbol == redirectout){
-            int out = open(parsed.at(parsed.size()-1), O_RDWR|O_CREAT);
+            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
             if (out == -1){
                 cout << "File open error." << endl;
                 return;
