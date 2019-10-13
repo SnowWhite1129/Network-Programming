@@ -65,7 +65,6 @@ void dupclose(vector <command> &tmp){
 
 int takeInput(){
     string line;
-    int num = 0;
     Symbol symbol = normal;
     getline(cin, line);
 
@@ -98,13 +97,13 @@ int takeInput(){
             args.push_back(str);
             if (symbol != redirectout)
                 continue;
+            symbol = normal;
         }
         execArgsPiped(args, symbol);
         args.clear();
-        ++num;
     }
 
-    if (num == 0){
+    if (symbol == normal){
         execArgs(args);
     }
     return true;
@@ -190,7 +189,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
             dup2(fd[WRITE_END], STDOUT_FILENO);
             command tmp;
-            int n;
+            int n = 1, err = -1;
             if (symbol != piped)
                 n = stoi(parsed.at(parsed.size()-1).c_str());
             cout <<  "N: " << n << endl;
@@ -201,12 +200,9 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
                     return;
                 }
                 dup2(errfd[WRITE_END], STDERR_FILENO);
-                tmp.Init(n, fd[READ_END], errfd[READ_END], numberexplamation);
-            } else if (symbol == numberpiped){
-                tmp.Init(n, fd[READ_END], -1, numberpiped);
-            } else {
-                tmp.Init(1, fd[READ_END], -1, piped);
+                err = errfd[READ_END];
             }
+            tmp.Init(n, fd[READ_END], err, numberexplamation);
             cmd.push_back(tmp);
         }
         if (symbol == redirectout){
