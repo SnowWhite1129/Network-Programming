@@ -12,15 +12,9 @@ struct command{
     int fd;
     int errfd;
     void Init(int n, int fd, int errfd);
-    command();
+    command(int n1, int fd1, int errfd1):n(n1), fd(fd1), errfd(errfd1){}
     ~command();
 };
-
-void command::Init(int n1, int fd1, int errfd1) {
-    n = n1;
-    fd = fd1;
-    errfd = errfd1;
-}
 
 int takeInput();
 void execArgs(vector <string> &parsed);
