@@ -185,37 +185,36 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
-    vector <command> tmp;
-    if (pid==0){
-        tmp = check();
-        dupinput(tmp);
-        if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
-            dup2(fd[WRITE_END], STDOUT_FILENO);
-            command tmp;
-            int n = 1, err = -1;
-            if (symbol != piped)
-                n = stoi(parsed.at(parsed.size()-1).c_str());
-            cout <<  "N: " << n << endl;
-            if (symbol == numberexplamation){
-                int errfd[2];
-                if (pipe(errfd) < 0) {
-                    cout << "Pipe could not be initialized" << endl;
-                    return;
-                }
-                dup2(errfd[WRITE_END], STDERR_FILENO);
-                err = errfd[READ_END];
-            }
-            tmp.Init(n, fd[READ_END], err, numberexplamation);
-            cmd.push_back(tmp);
-        }
-        if (symbol == redirectout){
-            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
-            if (out == -1){
-                cout << "File open error." << endl;
+    vector <command> tmp= check();
+    dupinput(tmp);
+    if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
+        dup2(fd[WRITE_END], STDOUT_FILENO);
+        command tmp;
+        int n = 1, err = -1;
+        if (symbol != piped)
+            n = stoi(parsed.at(parsed.size()-1).c_str());
+        cout <<  "N: " << n << endl;
+        if (symbol == numberexplamation){
+            int errfd[2];
+            if (pipe(errfd) < 0) {
+                cout << "Pipe could not be initialized" << endl;
                 return;
             }
+            dup2(errfd[WRITE_END], STDERR_FILENO);
+            err = errfd[READ_END];
         }
+        tmp.Init(n, fd[READ_END], err);
+        cmd.push_back(tmp);
+    }
+    if (symbol == redirectout){
+        int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
+        if (out == -1){
+            cout << "File open error." << endl;
+            return;
+        }
+    }
 
+    if (pid==0){
         char *args[MAXLIST];
 
         int length;

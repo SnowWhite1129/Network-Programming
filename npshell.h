@@ -11,15 +11,13 @@ struct command{
     int n;
     int fd;
     int errfd;
-    Symbol symbol;
-    void Init(int n, int fd, int errfd, Symbol symbol);
+    void Init(int n, int fd, int errfd);
 };
 
-void command::Init(int n, int fd, int errfd, Symbol symbol) {
+void command::Init(int n, int fd, int errfd) {
     n = n;
     fd = fd;
     errfd = errfd;
-    symbol = symbol;
 }
 
 int takeInput();
