@@ -179,12 +179,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
-    pid = fork();
-    if (pid < 0) {
-        cout << "Could not fork" << endl;
-        return;
-    }
-
     vector <command> tmp = check();
     dupinput(tmp);
     if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
@@ -202,7 +196,8 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             dup2(errfd[WRITE_END], STDERR_FILENO);
             err = errfd[READ_END];
         }
-        command tmpcmd(n, fd[READ_END], err);
+        command tmpcmd;
+        tmpcmd.Init(n, fd[READ_END], err);
         cmd.push_back(tmpcmd);
     }
     if (symbol == redirectout){
@@ -211,6 +206,12 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             cout << "File open error." << endl;
             return;
         }
+    }
+
+    pid = fork();
+    if (pid < 0) {
+        cout << "Could not fork" << endl;
+        return;
     }
 
     if (pid==0){
