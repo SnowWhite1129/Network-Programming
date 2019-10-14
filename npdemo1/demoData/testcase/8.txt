@@ -1,0 +1,9 @@
+ls | dog
+dog | cat test.html > test
+cat test
+ls | cat |1
+dog
+ls |2
+dog
+number
+exit

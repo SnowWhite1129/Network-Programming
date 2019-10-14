@@ -50,7 +50,7 @@ void dupinput(vector <command> &tmp){
         for (int i = 0; i < tmp.size(); ++i) {
 		fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd, STDIN_FILENO);
             dup2(tmp.at(i).fd[READ_END], STDIN_FILENO);
-            if (tmp.at(i).errfd != NULL)
+            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
                 dup2(tmp.at(i).errfd[READ_END], STDERR_FILENO);
         }
     }
@@ -61,7 +61,7 @@ void dupclose(vector <command> &tmp){
         for (int i = 0; i < tmp.size(); ++i) {
             close(tmp.at(i).fd[READ_END]);
             close(tmp.at(i).fd[WRITE_END]);
-            if (tmp.at(i).errfd != NULL)
+            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
                 close(tmp.at(i).errfd[READ_END]);
                 close(tmp.at(i).errfd[WRITE_END]);
         }

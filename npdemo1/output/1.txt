@@ -1,0 +1,35 @@
+% bin:.
+% bin
+mybin
+test.html
+% % .
+% Unknown command: [ls].
+% % bin
+mybin
+test.html
+% blackhole
+cat
+env
+figlet
+grep
+ls
+manyblessings
+noop
+number
+removetag
+removetag0
+sort
+square
+% % bin
+mybin
+test.html
+% Unknown command: [removetag].
+% % bin
+mybin
+test.html
+% 
+Test
+This is a test program
+for ras.
+
+% 

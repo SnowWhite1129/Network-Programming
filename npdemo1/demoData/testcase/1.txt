@@ -1,0 +1,15 @@
+printenv PATH
+ls
+setenv PATH .
+printenv PATH
+ls
+setenv PATH bin:.
+ls
+ls bin
+setenv PATH mybin
+ls
+removetag test.html
+setenv PATH bin:mybin
+ls 
+removetag test.html
+exit

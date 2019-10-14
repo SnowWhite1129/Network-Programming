@@ -1,0 +1,3 @@
+removetag test.html | number
+figlet Hello
+exit

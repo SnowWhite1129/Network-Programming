@@ -1,0 +1,4 @@
+manyblessings | cat | cat | cat | blackhole
+manyblessings | cat | cat | cat |1
+blackhole
+exit
