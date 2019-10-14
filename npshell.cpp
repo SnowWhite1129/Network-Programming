@@ -42,13 +42,13 @@ void check(vector <command> &tmp){
         if (cmd.at(i).n == 0)
             tmp.push_back(cmd.at(i));
     }
-    fprintf(stderr, "tmp: %d\n", tmp.size());
+    //fprintf(stderr, "tmp: %d\n", tmp.size());
 }
 
 void dupinput(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
-		fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd, STDIN_FILENO);
+		    //fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd[READ_END], STDIN_FILENO);
             dup2(tmp.at(i).fd[READ_END], STDIN_FILENO);
             if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
                 dup2(tmp.at(i).errfd[READ_END], STDERR_FILENO);
@@ -56,14 +56,22 @@ void dupinput(vector <command> &tmp){
     }
 }
 
-void dupclose(vector <command> &tmp){
+void dupcloseread(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
             close(tmp.at(i).fd[READ_END]);
+            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
+                close(tmp.at(i).errfd[READ_END]);
+        }
+    }
+}
+
+void dupclosewrite(vector <command> &tmp){
+    if (!tmp.empty()){ //Looking for some command output for this command input
+        for (int i = 0; i < tmp.size(); ++i) {
             close(tmp.at(i).fd[WRITE_END]);
             if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
                 close(tmp.at(i).errfd[READ_END]);
-                close(tmp.at(i).errfd[WRITE_END]);
         }
     }
 }
@@ -100,6 +108,8 @@ int takeInput(){
             continue;
         } else {
             args.push_back(str);
+            if (symbol != redirectout)
+                symbol = normal;
             continue;
         }
         execArgsPiped(args, symbol);
@@ -108,7 +118,7 @@ int takeInput(){
         args.clear();
     }
 
-    fprintf(stderr, "Size: %d\n", args.size());
+    //fprintf(stderr, "Size: %d\n", args.size());
 
     if (symbol == normal || symbol == redirectout){
         execArgs(args, symbol);
@@ -161,15 +171,16 @@ void execArgs(vector <string> &parsed, Symbol symbol){
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-	    fprintf(stderr, "ttttmp: %d\n", tmp.size());
-        dupinput(tmp);
-	    dupclose(tmp);
+	    //fprintf(stderr, "ttttmp: %d\n", tmp.size());
+        dupclosewrite(tmp);
+	    dupinput(tmp);
+	    dupcloseread(tmp);
         char *args[MAXLIST];
 	    for(int i=0; i<parsed.size();i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
         args[parsed.size()] = NULL;
-	    fprintf(stderr, "9999999999");
+	    //fprintf(stderr, "9999999999");
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
         }
@@ -177,8 +188,9 @@ void execArgs(vector <string> &parsed, Symbol symbol){
         argsFree(args);
         exit(0);
     } else {
-        fprintf(stderr, "123213213213\n");
-	    dupclose(tmp);
+        //fprintf(stderr, "123213213213\n");
+        dupclosewrite(tmp);
+        dupcloseread(tmp);
         int status;
         waitpid(pid, &status, 0);
     }
@@ -212,7 +224,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         tmpcmd.Init(n, fd, errfd);
         cmd.push_back(tmpcmd);
     }
-    fprintf(stderr, "Hey");
+    //fprintf(stderr, "Hey");
 
     pid = fork();
     if (pid < 0) {
@@ -222,11 +234,12 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     vector <command> tmp;
     check(tmp);
     if (pid==0){
-        dup2(fd[WRITE_END], STDOUT_FILENO);
-        dupinput(tmp);
-        dupclose(tmp);
         close(fd[READ_END]);
+        dup2(fd[WRITE_END], STDOUT_FILENO);
         close(fd[WRITE_END]);
+        dupclosewrite(tmp);
+        dupinput(tmp);
+        dupcloseread(tmp);
         if(symbol == numberexplamation){
             dup2(errfd[WRITE_END], STDERR_FILENO);
             close(errfd[READ_END]);
@@ -242,24 +255,25 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             length = parsed.size();
 
         for(int i=0; i<length;i++){
-            fprintf(stderr, "%d ", i);
+            //fprintf(stderr, "%d ", i);
             args[i] = strdup(parsed.at(i).c_str());
-            fprintf(stderr, "%s " ,args[i]);
+            //fprintf(stderr, "%s " ,args[i]);
         }
 
-        fprintf(stderr, "%d", length);
-        fprintf(stderr, "HI %s\n", args[0]);
+        //fprintf(stderr, "%d", length);
+        //fprintf(stderr, "HI %s\n", args[0]);
         args[length] = NULL;
 
         if (execvp(args[0], args) < 0) {
             cout << "Could not execute [" << args[0] << "]." << endl;
-            argsFree(args);
         }
-        fprintf(stderr, "HI");
+        argsFree(args);
+        //fprintf(stderr, "HI");
         exit(0);
     } else {
         int status;
-        dupclose(tmp);
+        dupclosewrite(tmp);
+        dupcloseread(tmp);
         waitpid(pid, &status, 0);
     }
 }
