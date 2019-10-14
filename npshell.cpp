@@ -98,10 +98,7 @@ int takeInput(){
             continue;
         } else {
             args.push_back(str);
-            if (symbol != redirectout) {
-                symbol = normal;
-                continue;
-            }
+            continue;
         }
         execArgsPiped(args, symbol);
         Count();
@@ -111,8 +108,8 @@ int takeInput(){
 
     fprintf(stderr, "Size: %d\n", args.size());
 
-    if (symbol == normal){
-        execArgs(args);
+    if (symbol == normal || symbol == redirectout){
+        execArgs(args, symbol);
         Count();
         Pop();
     }
@@ -132,7 +129,7 @@ void argsFree(char **args){
     }
 }
 // Function where the system command is executed
-void execArgs(vector <string> &parsed){
+void execArgs(vector <string> &parsed, Symbol symbol){
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
@@ -144,6 +141,14 @@ void execArgs(vector <string> &parsed){
     }else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(0));
 	    return;
+    }
+
+    if (symbol == redirectout){
+        int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
+        if (out == -1){
+            cout << "File open error." << endl;
+            return;
+        }
     }
 
     // Forking a child
@@ -180,22 +185,31 @@ void execArgs(vector <string> &parsed){
 // Function where the piped system commands is executed
 void execArgsPiped(vector <string> parsed, Symbol symbol)
 {
-    int fd[2], status;
+    int fd[2], errfd[2];
     pid_t pid;
 
     if (pipe(fd) < 0) {
         cout << "Pipe could not be initialized" << endl;
         return;
     }
+    if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
+        int n = 1, err = -1;
+        if (symbol != piped)
+            n = std::stoi(parsed.at(parsed.size()-1));
+        //cout <<  "N: " << n << endl;
+        if (symbol == numberexplamation){
 
-    fprintf(stderr, "Hey");
-    if (symbol == redirectout){
-        int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
-        if (out == -1){
-            cout << "File open error." << endl;
-            return;
+            if (pipe(errfd) < 0) {
+                cout << "Pipe could not be initialized" << endl;
+                return;
+            }
+            err = errfd[READ_END];
         }
+        command tmpcmd;
+        tmpcmd.Init(n, fd[READ_END], err);
+        cmd.push_back(tmpcmd);
     }
+    fprintf(stderr, "Hey");
 
     pid = fork();
     if (pid < 0) {
@@ -205,32 +219,16 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     vector <command> tmp;
     check(tmp);
     if (pid==0){
-        if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
-            dup2(fd[WRITE_END], STDOUT_FILENO);
-            int n = 1, err = -1;
-            if (symbol != piped)
-                n = std::stoi(parsed.at(parsed.size()-1));
-            //cout <<  "N: " << n << endl;
-            if (symbol == numberexplamation){
-                int errfd[2];
-                if (pipe(errfd) < 0) {
-                    cout << "Pipe could not be initialized" << endl;
-                    return;
-                }
-                dup2(errfd[WRITE_END], STDERR_FILENO);
-                err = errfd[READ_END];
-            }
-            command tmpcmd;
-            tmpcmd.Init(n, fd[READ_END], err);
-            cmd.push_back(tmpcmd);
-        }
+        dup2(fd[WRITE_END], STDOUT_FILENO);
         dupinput(tmp);
         dupclose(tmp);
         close(fd[READ_END]);
         close(fd[WRITE_END]);
-        //if(symbol == stderr)
-        //close();
-        //close();
+        if(symbol == numberexplamation){
+            dup2(errfd[WRITE_END], STDERR_FILENO);
+            close(errfd[READ_END]);
+            close(errfd[WRITE_END]);
+        }
 	    
         char *args[MAXLIST];
 
@@ -257,11 +255,13 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         fprintf(stderr, "HI");
         exit(0);
     } else {
+        int status;
         close(fd[READ_END]);
         close(fd[WRITE_END]);
-        //if(symbol == number...)
-        //close(errfd[READ...]);
-        //close(errfd[WRI..]);
+        if(symbol == numberexplamation){
+            close(errfd[READ_END]);
+            close(errfd[WRITE_END]);
+        }
         dupclose(tmp);
         waitpid(pid, &status, 0);
     }
