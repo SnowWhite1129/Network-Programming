@@ -9,14 +9,16 @@ enum Symbol {piped, numberpiped, numberexplamation, redirectout, normal};
 
 struct command{
     int n;
-    int fd;
-    int errfd;
-    void Init(int n, int fd, int errfd);
+    int fd[2];
+    int errfd[2];
+    void Init(int n1, int fd1[2], int errfd1[2]);
 };
-void command::Init(int n1, int fd1, int errfd1) {
+void command::Init(int n1, int fd1[2], int errfd1[2]) {
     n = n1;
-    fd = fd1;
-    errfd = errfd1;
+    for (int i = 0; i < 2; ++i) {
+        fd[i] = fd1[i];
+        errfd[i] = errfd1[i];
+    }
 }
 int takeInput();
 void execArgs(vector <string> &parsed, Symbol symbol);

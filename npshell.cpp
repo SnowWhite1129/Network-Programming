@@ -49,9 +49,9 @@ void dupinput(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
 		fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd, STDIN_FILENO);
-            dup2(tmp.at(i).fd, STDIN_FILENO);
-            if (tmp.at(i).errfd != -1)
-                dup2(tmp.at(i).errfd, STDERR_FILENO);
+            dup2(tmp.at(i).fd[READ_END], STDIN_FILENO);
+            if (tmp.at(i).errfd != NULL)
+                dup2(tmp.at(i).errfd[READ_END], STDERR_FILENO);
         }
     }
 }
@@ -59,9 +59,11 @@ void dupinput(vector <command> &tmp){
 void dupclose(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
-            close(tmp.at(i).fd);
-            if (tmp.at(i).errfd != -1)
-                close(tmp.at(i).errfd);
+            close(tmp.at(i).fd[READ_END]);
+            close(tmp.at(i).fd[WRITE_END]);
+            if (tmp.at(i).errfd != NULL)
+                close(tmp.at(i).errfd[READ_END]);
+                close(tmp.at(i).errfd[WRITE_END]);
         }
     }
 }
@@ -185,7 +187,10 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 // Function where the piped system commands is executed
 void execArgsPiped(vector <string> parsed, Symbol symbol)
 {
-    int fd[2], errfd[2];
+    int fd[2] , errfd[2];
+    for (int i = 0; i < 2; ++i) {
+        errfd[i] = -1;
+    }
     pid_t pid;
 
     if (pipe(fd) < 0) {
@@ -198,15 +203,13 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             n = std::stoi(parsed.at(parsed.size()-1));
         //cout <<  "N: " << n << endl;
         if (symbol == numberexplamation){
-
             if (pipe(errfd) < 0) {
                 cout << "Pipe could not be initialized" << endl;
                 return;
             }
-            err = errfd[READ_END];
         }
         command tmpcmd;
-        tmpcmd.Init(n, fd[READ_END], err);
+        tmpcmd.Init(n, fd, errfd);
         cmd.push_back(tmpcmd);
     }
     fprintf(stderr, "Hey");
@@ -256,12 +259,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         exit(0);
     } else {
         int status;
-        close(fd[READ_END]);
-        close(fd[WRITE_END]);
-        if(symbol == numberexplamation){
-            close(errfd[READ_END]);
-            close(errfd[WRITE_END]);
-        }
         dupclose(tmp);
         waitpid(pid, &status, 0);
     }
