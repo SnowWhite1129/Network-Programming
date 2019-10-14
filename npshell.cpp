@@ -1,3 +1,4 @@
+#include<string>
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -13,6 +14,8 @@
 
 #define READ_END 0
 #define WRITE_END 1
+
+using namespace std;
 
 vector<command> cmd;
 
@@ -45,6 +48,7 @@ void check(vector <command> &tmp){
 void dupinput(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
+		fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd, STDIN_FILENO);
             dup2(tmp.at(i).fd, STDIN_FILENO);
             if (tmp.at(i).errfd != -1)
                 dup2(tmp.at(i).errfd, STDERR_FILENO);
@@ -133,7 +137,7 @@ void execArgs(vector <string> &parsed)
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
-        if(!setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)){
+        if(!setenv(parsed.at(0).c_str(), parsed.at(1).c_str(), true)){
             cout << "Set env Error" << endl;
             exit(0);
         }
@@ -151,7 +155,7 @@ void execArgs(vector <string> &parsed)
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-	fprintf(stderr, "%d\n", tmp.size());
+	fprintf(stderr, "ttttmp: %d\n", tmp.size());
         dupinput(tmp);
 	dupclose(tmp);
         char *args[MAXLIST];
@@ -159,13 +163,16 @@ void execArgs(vector <string> &parsed)
             args[i] = strdup(parsed.at(i).c_str());
         }
         args[parsed.size()] = NULL;
+	fprintf(stderr, "9999999999");
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
         }
+	fprintf(stderr, "555555");
         argsFree(args);
         exit(0);
     } else {
-	    fprintf(stderr, "123213213213\n");
+        fprintf(stderr, "123213213213\n");
+	dupclose(tmp);
         int status;
         waitpid(pid, &status, 0);
     }
@@ -186,8 +193,8 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         dup2(fd[WRITE_END], STDOUT_FILENO);
         int n = 1, err = -1;
         if (symbol != piped)
-            n = stoi(parsed.at(parsed.size()-1).c_str());
-        cout <<  "N: " << n << endl;
+            n = std::stoi(parsed.at(parsed.size()-1));
+        //cout <<  "N: " << n << endl;
         if (symbol == numberexplamation){
             int errfd[2];
             if (pipe(errfd) < 0) {
@@ -216,8 +223,8 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
     vector <command> tmp;
+    check(tmp);
     if (pid==0){
-	check(tmp);
 	dupinput(tmp);
 	dupclose(tmp);
 	close(fd[READ_END]);
@@ -256,7 +263,7 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
 	//if(symbol == number...)
 	//close(errfd[READ...]);
 	//close(errfd[WRI..]);	
-        //dupclose(tmp);
+        dupclose(tmp);
         waitpid(pid, &status, 0);
     }
 }

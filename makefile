@@ -1,2 +1,2 @@
 all:npshell.cpp
-	g++ npshell.cpp test.cpp -o npshell
+	g++ -std=c++11 npshell.cpp test.cpp -o npshell
