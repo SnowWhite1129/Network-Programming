@@ -132,8 +132,7 @@ void argsFree(char **args){
     }
 }
 // Function where the system command is executed
-void execArgs(vector <string> &parsed)
-{	
+void execArgs(vector <string> &parsed){
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
@@ -144,7 +143,7 @@ void execArgs(vector <string> &parsed)
         return;
     }else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(0));
-	return;
+	    return;
     }
 
     // Forking a child
@@ -155,24 +154,24 @@ void execArgs(vector <string> &parsed)
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-	fprintf(stderr, "ttttmp: %d\n", tmp.size());
+	    fprintf(stderr, "ttttmp: %d\n", tmp.size());
         dupinput(tmp);
-	dupclose(tmp);
+	    dupclose(tmp);
         char *args[MAXLIST];
-	for(int i=0; i<parsed.size();i++){
+	    for(int i=0; i<parsed.size();i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
         args[parsed.size()] = NULL;
-	fprintf(stderr, "9999999999");
+	    fprintf(stderr, "9999999999");
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
         }
-	fprintf(stderr, "555555");
+	    fprintf(stderr, "555555");
         argsFree(args);
         exit(0);
     } else {
         fprintf(stderr, "123213213213\n");
-	dupclose(tmp);
+	    dupclose(tmp);
         int status;
         waitpid(pid, &status, 0);
     }
@@ -189,25 +188,6 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         return;
     }
 
-    if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
-        dup2(fd[WRITE_END], STDOUT_FILENO);
-        int n = 1, err = -1;
-        if (symbol != piped)
-            n = std::stoi(parsed.at(parsed.size()-1));
-        //cout <<  "N: " << n << endl;
-        if (symbol == numberexplamation){
-            int errfd[2];
-            if (pipe(errfd) < 0) {
-                cout << "Pipe could not be initialized" << endl;
-                return;
-            }
-            dup2(errfd[WRITE_END], STDERR_FILENO);
-            err = errfd[READ_END];
-        }
-        command tmpcmd;
-        tmpcmd.Init(n, fd[READ_END], err);
-        cmd.push_back(tmpcmd);
-    }
     fprintf(stderr, "Hey");
     if (symbol == redirectout){
         int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
@@ -225,13 +205,32 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     vector <command> tmp;
     check(tmp);
     if (pid==0){
-	dupinput(tmp);
-	dupclose(tmp);
-	close(fd[READ_END]);
+        if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
+            dup2(fd[WRITE_END], STDOUT_FILENO);
+            int n = 1, err = -1;
+            if (symbol != piped)
+                n = std::stoi(parsed.at(parsed.size()-1));
+            //cout <<  "N: " << n << endl;
+            if (symbol == numberexplamation){
+                int errfd[2];
+                if (pipe(errfd) < 0) {
+                    cout << "Pipe could not be initialized" << endl;
+                    return;
+                }
+                dup2(errfd[WRITE_END], STDERR_FILENO);
+                err = errfd[READ_END];
+            }
+            command tmpcmd;
+            tmpcmd.Init(n, fd[READ_END], err);
+            cmd.push_back(tmpcmd);
+        }
+        dupinput(tmp);
+        dupclose(tmp);
+        close(fd[READ_END]);
         close(fd[WRITE_END]);
-	//if(symbol == stderr)
-	//close();
-	//close();	
+        //if(symbol == stderr)
+        //close();
+        //close();
 	    
         char *args[MAXLIST];
 
@@ -255,14 +254,14 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             cout << "Could not execute [" << args[0] << "]." << endl;
             argsFree(args);
         }
-	fprintf(stderr, "HI");
+        fprintf(stderr, "HI");
         exit(0);
     } else {
         close(fd[READ_END]);
         close(fd[WRITE_END]);
-	//if(symbol == number...)
-	//close(errfd[READ...]);
-	//close(errfd[WRI..]);	
+        //if(symbol == number...)
+        //close(errfd[READ...]);
+        //close(errfd[WRI..]);
         dupclose(tmp);
         waitpid(pid, &status, 0);
     }
