@@ -19,7 +19,7 @@ void command::Init(int n1, int fd1, int errfd1) {
     errfd = errfd1;
 }
 int takeInput();
-void execArgs(vector <string> &parsed);
+void execArgs(vector <string> &parsed, Symbol symbol);
 void execArgsPiped(vector <string> parsed, Symbol symbol);
 
 #endif //NETWORK_PROGRAMMING_NPSHELL_H
