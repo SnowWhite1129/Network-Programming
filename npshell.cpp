@@ -50,8 +50,6 @@ void dupinput(vector <command> &tmp){
         for (int i = 0; i < tmp.size(); ++i) {
 		    //fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd[READ_END], STDIN_FILENO);
             dup2(tmp.at(i).fd[READ_END], STDIN_FILENO);
-            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
-                dup2(tmp.at(i).errfd[READ_END], STDERR_FILENO);
         }
     }
 }
@@ -60,8 +58,6 @@ void dupcloseread(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
             close(tmp.at(i).fd[READ_END]);
-            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
-                close(tmp.at(i).errfd[READ_END]);
         }
     }
 }
@@ -70,8 +66,6 @@ void dupclosewrite(vector <command> &tmp){
     if (!tmp.empty()){ //Looking for some command output for this command input
         for (int i = 0; i < tmp.size(); ++i) {
             close(tmp.at(i).fd[WRITE_END]);
-            if (tmp.at(i).errfd[READ_END] != -1 && tmp.at(i).errfd[WRITE_END] != -1)
-                close(tmp.at(i).errfd[READ_END]);
         }
     }
 }
@@ -155,13 +149,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    return;
     }
 
-    if (symbol == redirectout){
-        int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
-        if (out == -1){
-            cout << "File open error." << endl;
-            return;
-        }
-    }
+
 
     // Forking a child
     pid_t pid = fork();
@@ -175,11 +163,28 @@ void execArgs(vector <string> &parsed, Symbol symbol){
         dupclosewrite(tmp);
 	    dupinput(tmp);
 	    dupcloseread(tmp);
+
+        if (symbol == redirectout){
+            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
+            if (out == -1){
+                cout << "File open error." << endl;
+                return;
+            }
+            close(STDOUT_FILENO);
+            dup2(out, STDOUT_FILENO);
+            close(out);
+        }
+
         char *args[MAXLIST];
-	    for(int i=0; i<parsed.size();i++){
+        int length;
+        if (symbol == redirectout)
+            length = parsed.size()-1;
+        else
+            length = parsed.size();
+	    for(int i=0; i<length;i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
-        args[parsed.size()] = NULL;
+        args[length] = NULL;
 	    //fprintf(stderr, "9999999999");
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
@@ -199,10 +204,8 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 // Function where the piped system commands is executed
 void execArgsPiped(vector <string> parsed, Symbol symbol)
 {
-    int fd[2] , errfd[2];
-    for (int i = 0; i < 2; ++i) {
-        errfd[i] = -1;
-    }
+    int fd[2];
+
     pid_t pid;
 
     if (pipe(fd) < 0) {
@@ -214,14 +217,8 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
         if (symbol != piped)
             n = std::stoi(parsed.at(parsed.size()-1));
         //cout <<  "N: " << n << endl;
-        if (symbol == numberexplamation){
-            if (pipe(errfd) < 0) {
-                cout << "Pipe could not be initialized" << endl;
-                return;
-            }
-        }
         command tmpcmd;
-        tmpcmd.Init(n, fd, errfd);
+        tmpcmd.Init(n, fd);
         cmd.push_back(tmpcmd);
     }
     //fprintf(stderr, "Hey");
@@ -236,15 +233,13 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
     if (pid==0){
         close(fd[READ_END]);
         dup2(fd[WRITE_END], STDOUT_FILENO);
+        if(symbol == numberexplamation){
+            dup2(fd[WRITE_END], STDERR_FILENO);
+        }
         close(fd[WRITE_END]);
         dupclosewrite(tmp);
         dupinput(tmp);
         dupcloseread(tmp);
-        if(symbol == numberexplamation){
-            dup2(errfd[WRITE_END], STDERR_FILENO);
-            close(errfd[READ_END]);
-            close(errfd[WRITE_END]);
-        }
 	    
         char *args[MAXLIST];
 
