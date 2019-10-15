@@ -28,12 +28,12 @@ void Pop(){
     //TODO
     //Need to test
     vector <command>::iterator it;
-    for (it = cmd.begin(); it!=cmd.end() ; ++it) {
+    for (it = cmd.begin(); it!=cmd.end();) {
         if (it->n == -1){
-            vector <command>::iterator tmp;
-            tmp = it;
-            cmd.erase(tmp);
-        }
+            it = cmd.erase(it);
+        } else {
+	    it++;
+	} 
     }
 }
 
