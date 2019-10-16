@@ -17,56 +17,20 @@
 
 using namespace std;
 
-vector<command> cmd;
+command cmd[MAXLIST];
 
-void Count(){
-    for (int i = 0; i < cmd.size(); ++i) {
-        --cmd.at(i).n;
-    }
-}
 void Pop(){
-    //TODO
-    //Need to test
-    vector <command>::iterator it;
-    for (it = cmd.begin(); it!=cmd.end();) {
-        if (it->n == -1){
-            it = cmd.erase(it);
-        } else {
-	    it++;
-	} 
+    for (int i=0; i<MAXLIST-1;i++) {
+        cmd[i] = cmd[i+1];
     }
+    cmd[MAXLIST-1].Clean();
 }
 
-void check(vector <command> &tmp){
-    for (int i = 0; i < cmd.size(); ++i) {
-        if (cmd.at(i).n == 0)
-            tmp.push_back(cmd.at(i));
-    }
-    //fprintf(stderr, "tmp: %d\n", tmp.size());
-}
-
-void dupinput(vector <command> &tmp){
-    if (!tmp.empty()){ //Looking for some command output for this command input
-        for (int i = 0; i < tmp.size(); ++i) {
-		    //fprintf(stderr, "fd: %d %d\n" ,tmp.at(i).fd[READ_END], STDIN_FILENO);
-            dup2(tmp.at(i).fd[READ_END], STDIN_FILENO);
-        }
-    }
-}
-
-void dupcloseread(vector <command> &tmp){
-    if (!tmp.empty()){ //Looking for some command output for this command input
-        for (int i = 0; i < tmp.size(); ++i) {
-            close(tmp.at(i).fd[READ_END]);
-        }
-    }
-}
-
-void dupclosewrite(vector <command> &tmp){
-    if (!tmp.empty()){ //Looking for some command output for this command input
-        for (int i = 0; i < tmp.size(); ++i) {
-            close(tmp.at(i).fd[WRITE_END]);
-        }
+int check(int n){
+    if (cmd[n].fd[READ_END]!=-1){
+        return cmd[n].fd[READ_END];
+    } else{
+        return -1;
     }
 }
 
@@ -107,25 +71,24 @@ int takeInput(){
             continue;
         }
         execArgsPiped(args, symbol);
-        Count();
         Pop();
         args.clear();
     }
 
-    //fprintf(stderr, "Size: %d\n", args.size());
-
     if (symbol == normal || symbol == redirectout){
         execArgs(args, symbol);
-        Count();
         Pop();
     }
     return true;
 }
 
-void printenv(string &name){
+void printenv(const string &name){
 	cout << getenv(name.c_str()) << endl;
 }
 bool Init(){
+    for (int i = 0; i < MAXLIST; ++i) {
+        cmd[i].Clean();
+    }
 	return setenv("PATH", "bin:.", true);
 }
 
@@ -139,7 +102,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
     if(parsed.at(0)=="exit"){
         exit(0);
     }else if (parsed.at(0)== "setenv"){
-        if(!setenv(parsed.at(0).c_str(), parsed.at(1).c_str(), true)){
+        if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
             cout << "Set env Error" << endl;
             exit(0);
         }
@@ -149,20 +112,17 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    return;
     }
 
-
-
     // Forking a child
     pid_t pid = fork();
-    vector <command> tmp;
-    check(tmp);
     if (pid == -1) {
         cout << "Failed forking child" << endl ;
         return;
     } else if (pid == 0) {
-	    //fprintf(stderr, "ttttmp: %d\n", tmp.size());
-        dupclosewrite(tmp);
-	    dupinput(tmp);
-	    dupcloseread(tmp);
+	    if (cmd[0].fd[READ_END]!=-1){
+            close(cmd[0].fd[WRITE_END]);
+            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
+            close(cmd[0].fd[READ_END]);
+	    }
 
         if (symbol == redirectout){
             int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
@@ -175,6 +135,10 @@ void execArgs(vector <string> &parsed, Symbol symbol){
             close(out);
         }
 
+        for (int i = 3; i < 1024; ++i) {
+            close(i);
+        }
+
         char *args[MAXLIST];
         int length;
         if (symbol == redirectout)
@@ -185,51 +149,50 @@ void execArgs(vector <string> &parsed, Symbol symbol){
             args[i] = strdup(parsed.at(i).c_str());
         }
         args[length] = NULL;
-	    //fprintf(stderr, "9999999999");
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
         }
-	    fprintf(stderr, "555555");
         argsFree(args);
         exit(0);
     } else {
-        //fprintf(stderr, "123213213213\n");
-        dupclosewrite(tmp);
-        dupcloseread(tmp);
+        if (cmd[0].fd[READ_END]!=-1){
+            close(cmd[0].fd[WRITE_END]);
+            close(cmd[0].fd[READ_END]);
+        }
         int status;
         waitpid(pid, &status, 0);
     }
 }
 
 // Function where the piped system commands is executed
-void execArgsPiped(vector <string> parsed, Symbol symbol)
+void execArgsPiped(vector <string> &parsed, Symbol symbol)
 {
-    int fd[2];
-
+    int fd[2], n=1;
     pid_t pid;
 
-    if (pipe(fd) < 0) {
-        cout << "Pipe could not be initialized" << endl;
-        return;
+    if (symbol != piped)
+        n = stoi(parsed.at(parsed.size()-1));
+
+    int prevfd = check(n);
+
+    if (prevfd == -1) {
+        if (pipe(fd) < 0) {
+            cout << "Pipe could not be initialized" << endl;
+            return;
+        }
+        cmd[n].Init(fd);
+    } else {
+        for (int i = 0; i < 2; ++i) {
+            fd[i] = cmd[n].fd[i];
+        }
     }
-    if (symbol == piped || symbol == numberpiped || symbol == numberexplamation) {
-        int n = 1, err = -1;
-        if (symbol != piped)
-            n = std::stoi(parsed.at(parsed.size()-1));
-        //cout <<  "N: " << n << endl;
-        command tmpcmd;
-        tmpcmd.Init(n, fd);
-        cmd.push_back(tmpcmd);
-    }
-    //fprintf(stderr, "Hey");
 
     pid = fork();
     if (pid < 0) {
         cout << "Could not fork" << endl;
         return;
     }
-    vector <command> tmp;
-    check(tmp);
+
     if (pid==0){
         close(fd[READ_END]);
         dup2(fd[WRITE_END], STDOUT_FILENO);
@@ -237,9 +200,15 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             dup2(fd[WRITE_END], STDERR_FILENO);
         }
         close(fd[WRITE_END]);
-        dupclosewrite(tmp);
-        dupinput(tmp);
-        dupcloseread(tmp);
+        if (cmd[0].fd[READ_END]!=-1){
+            close(cmd[0].fd[WRITE_END]);
+            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
+            close(cmd[0].fd[READ_END]);
+        }
+
+        for (int i = 3; i < 1024; ++i) {
+            close(i);
+        }
 	    
         char *args[MAXLIST];
 
@@ -250,31 +219,30 @@ void execArgsPiped(vector <string> parsed, Symbol symbol)
             length = parsed.size();
 
         for(int i=0; i<length;i++){
-            //fprintf(stderr, "%d ", i);
             args[i] = strdup(parsed.at(i).c_str());
-            //fprintf(stderr, "%s " ,args[i]);
         }
 
-        //fprintf(stderr, "%d", length);
-        //fprintf(stderr, "HI %s\n", args[0]);
         args[length] = NULL;
 
         if (execvp(args[0], args) < 0) {
             cout << "Could not execute [" << args[0] << "]." << endl;
         }
         argsFree(args);
-        //fprintf(stderr, "HI");
         exit(0);
     } else {
-        int status;
-        dupclosewrite(tmp);
-        dupcloseread(tmp);
-        waitpid(pid, &status, 0);
+        if (cmd[0].fd[READ_END]!=-1){
+            close(cmd[0].fd[WRITE_END]);
+            close(cmd[0].fd[READ_END]);
+        }
+        if (symbol != piped){
+            int status;
+            waitpid(pid, &status, 0);
+        }
     }
 }
 
 int main(){
-    if(Init()){
+    if(Init()==-1){
 	    printf("Init error\n");
 	    exit(0);
     }
