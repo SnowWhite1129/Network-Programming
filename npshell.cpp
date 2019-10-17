@@ -85,17 +85,17 @@ int takeInput(){
 void printenv(const string &name){
 	cout << getenv(name.c_str()) << endl;
 }
+
 bool Init(){
-    for (int i = 0; i < MAXLIST; ++i) {
-        cmd[i].Clean();
+    for (auto & i : cmd) {
+        i.Clean();
     }
-	return setenv("PATH", "bin:.", true);
+	return setenv("PATH", "bin:.", true)==-1;
 }
 
 void argsFree(char **args){
-    for(int i=0;args[i]!=NULL;++i){
+    for(int i=0;args[i]!= nullptr;++i)
         free(args[i]);
-    }
 }
 // Function where the system command is executed
 void execArgs(vector <string> &parsed, Symbol symbol){
@@ -108,7 +108,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
         }
         return;
     }else if(parsed.at(0) == "printenv"){
-    	printenv(parsed.at(0));
+    	printenv(parsed.at(1));
 	    return;
     }
 
@@ -148,7 +148,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    for(int i=0; i<length;i++){
             args[i] = strdup(parsed.at(i).c_str());
         }
-        args[length] = NULL;
+        args[length] = nullptr;
         if (execvp(args[0], args) < 0) {
             cout << "Unknown command: [" << args[0] << "]." << endl;
         }

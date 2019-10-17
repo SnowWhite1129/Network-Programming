@@ -32,5 +32,10 @@ void command::Clean() {
 int takeInput();
 void execArgs(vector <string> &parsed, Symbol symbol);
 void execArgsPiped(vector <string> &parsed, Symbol symbol);
+void Pop();
+int check(int n);
+void printenv(const string &name);
+bool Init();
+void argsFree(char **args);
 
 #endif //NETWORK_PROGRAMMING_NPSHELL_H
