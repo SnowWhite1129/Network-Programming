@@ -19,6 +19,13 @@ using namespace std;
 
 command cmd[MAXLIST];
 
+void childHandler(int signo){
+    int status;
+    while (waitpid(-1, &status, WNOHANG) > 0);
+    // NON-BLOCKING WAIT
+    // Return immediately if no child has exited.
+}
+
 void Pop(){
     for (int i=0; i<MAXLIST-1;i++)
         cmd[i] = cmd[i+1];
@@ -232,6 +239,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
 }
 
 int main(){
+    signal(SIGCHLD, childHandler);
+
     if(!Init()){
 	    printf("Init error\n");
 	    exit(0);
