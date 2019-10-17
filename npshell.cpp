@@ -20,28 +20,26 @@ using namespace std;
 command cmd[MAXLIST];
 
 void Pop(){
-    for (int i=0; i<MAXLIST-1;i++) {
+    for (int i=0; i<MAXLIST-1;i++)
         cmd[i] = cmd[i+1];
-    }
     cmd[MAXLIST-1].Clean();
 }
 
 int check(int n){
-    if (cmd[n].fd[READ_END]!=-1){
+    if (cmd[n].fd[READ_END]!=-1)
         return cmd[n].fd[READ_END];
-    } else{
+    else
         return -1;
-    }
 }
 
 int takeInput(){
     string line;
     Symbol symbol = normal;
-    getline(cin, line);
+    if (!getline(cin, line))
+        exit(0);
 
-    if (line.length()==0){
+    if (line.length()==0)
         return false;
-    }
 
     istringstream iss(line);
     string str;
@@ -54,9 +52,8 @@ int takeInput(){
                 symbol = numberpiped;
                 str = str.substr(1);
                 args.push_back(str);
-            } else{
+            } else
                 symbol = piped;
-            }
         } else if (str[0] == '!'){
             symbol = numberexplamation;
             str = str.substr(1);
@@ -87,9 +84,8 @@ void printenv(const string &name){
 }
 
 bool Init(){
-    for (auto & i : cmd) {
+    for (auto & i : cmd)
         i.Clean();
-    }
 	return setenv("PATH", "bin:.", true)==-1;
 }
 
@@ -99,15 +95,14 @@ void argsFree(char **args){
 }
 // Function where the system command is executed
 void execArgs(vector <string> &parsed, Symbol symbol){
-    if(parsed.at(0)=="exit"){
+    if (parsed.at(0)=="exit"){
         exit(0);
-    }else if (parsed.at(0)== "setenv"){
+    } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
             cout << "Set env Error" << endl;
             exit(0);
         }
-        return;
-    }else if(parsed.at(0) == "printenv"){
+    } else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(1));
 	    return;
     }
@@ -135,9 +130,8 @@ void execArgs(vector <string> &parsed, Symbol symbol){
             close(out);
         }
 
-        for (int i = 3; i < 1024; ++i) {
+        for (int i = 3; i < 1024; ++i)
             close(i);
-        }
 
         char *args[MAXLIST];
         int length;
@@ -145,13 +139,12 @@ void execArgs(vector <string> &parsed, Symbol symbol){
             length = parsed.size()-1;
         else
             length = parsed.size();
-	    for(int i=0; i<length;i++){
+	    for(int i=0; i<length;i++)
             args[i] = strdup(parsed.at(i).c_str());
-        }
+
         args[length] = nullptr;
-        if (execvp(args[0], args) < 0) {
+        if (execvp(args[0], args) < 0)
             cout << "Unknown command: [" << args[0] << "]." << endl;
-        }
         argsFree(args);
         exit(0);
     } else {
@@ -182,9 +175,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
         }
         cmd[n].Init(fd);
     } else {
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < 2; ++i)
             fd[i] = cmd[n].fd[i];
-        }
     }
 
     pid = fork();
@@ -196,9 +188,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
     if (pid==0){
         close(fd[READ_END]);
         dup2(fd[WRITE_END], STDOUT_FILENO);
-        if(symbol == numberexplamation){
+        if(symbol == numberexplamation)
             dup2(fd[WRITE_END], STDERR_FILENO);
-        }
         close(fd[WRITE_END]);
         if (cmd[0].fd[READ_END]!=-1){
             close(cmd[0].fd[WRITE_END]);
@@ -206,9 +197,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
             close(cmd[0].fd[READ_END]);
         }
 
-        for (int i = 3; i < 1024; ++i) {
+        for (int i = 3; i < 1024; ++i)
             close(i);
-        }
 	    
         char *args[MAXLIST];
 
@@ -218,15 +208,13 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
         else
             length = parsed.size();
 
-        for(int i=0; i<length;i++){
+        for(int i=0; i<length;i++)
             args[i] = strdup(parsed.at(i).c_str());
-        }
 
         args[length] = NULL;
 
-        if (execvp(args[0], args) < 0) {
+        if (execvp(args[0], args) < 0)
             cout << "Could not execute [" << args[0] << "]." << endl;
-        }
         argsFree(args);
         exit(0);
     } else {
@@ -242,7 +230,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
 }
 
 int main(){
-    if(Init()==-1){
+    if(!Init()){
 	    printf("Init error\n");
 	    exit(0);
     }
