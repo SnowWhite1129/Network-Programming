@@ -86,7 +86,7 @@ void printenv(const string &name){
 bool Init(){
     for (auto & i : cmd)
         i.Clean();
-	return setenv("PATH", "bin:.", true)==-1;
+	return setenv("PATH", "bin:.", true)!=-1;
 }
 
 void argsFree(char **args){
