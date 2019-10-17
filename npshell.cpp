@@ -35,8 +35,10 @@ int check(int n){
 int takeInput(){
     string line;
     Symbol symbol = normal;
-    if (!getline(cin, line))
+    if (!getline(cin, line)){
+        puts("");
         exit(0);
+    }
 
     if (line.length()==0)
         return false;
