@@ -108,20 +108,20 @@ void execArgs(vector <string> &parsed, Symbol symbol){
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
-            cout << "Set env Error" << endl;
             exit(0);
         }
+        return;
     } else if(parsed.at(0) == "printenv"){
     	printenv(parsed.at(1));
 	    return;
     }
 
     // Forking a child
-    pid_t pid = fork();
-    if (pid == -1) {
-        cout << "Failed forking child" << endl ;
-        return;
-    } else if (pid == 0) {
+    pid_t pid;
+    while((pid=fork())<0){
+        usleep(1000);
+    }
+    if (pid == 0) {
 	    if (cmd[0].fd[READ_END]!=-1){
             close(cmd[0].fd[WRITE_END]);
             dup2(cmd[0].fd[READ_END], STDIN_FILENO);
@@ -129,7 +129,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    }
 
         if (symbol == redirectout){
-            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT);
+            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT, 0666);
             if (out == -1){
                 cout << "File open error." << endl;
                 return;
@@ -188,10 +188,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
             fd[i] = cmd[n].fd[i];
     }
 
-    pid = fork();
-    if (pid < 0) {
-        cout << "Could not fork" << endl;
-        return;
+    while((pid=fork())<0){
+        usleep(1000);
     }
 
     if (pid==0){
