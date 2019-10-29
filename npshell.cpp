@@ -1,13 +1,13 @@
-#include<string>
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<unistd.h>
+#include <string>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sstream>
-#include<sys/types.h>
-#include<sys/wait.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <sys.socket.h>
-#include<iostream>
+#include <iostream>
 #include <fcntl.h>
 #include "npshell.h"
 
@@ -21,7 +21,7 @@ using namespace std;
 command cmd[MAXLIST];
 void func(int sockfd)
 {
-    char buff[MAX];
+    string buff;
     int n;
     // infinite loop for chat
     while (true) {
@@ -29,25 +29,9 @@ void func(int sockfd)
         if (!takeInput())
             continue;
 
-        bzero(buff, MAX);
+        write(sockfd, buff.c_str(), buff.size());
 
-        // read the message from client and copy it in buffer
-        read(sockfd, buff, sizeof(buff));
-        // print buffer which contains the client contents
-        printf("From client: %s\t To client : ", buff);
-        bzero(buff, MAX);
-        n = 0;
-        // copy server message in the buffer
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-
-        // and send that buffer to client
-        write(sockfd, buff, sizeof(buff));
-
-        // if msg contains "Exit" then server exit and chat ended.
-        if (strncmp("exit", buff, 4) == 0) {
-            printf("Server Exit...\n");
-            // After chatting close the socket
+        if (buff == "exit") {
             close(sockfd);
             break;
         }
@@ -306,21 +290,16 @@ int main(){
 
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
-        printf("Listen failed...\n");
         exit(0);
     }
-    else
-        printf("Server listening..\n");
+
     len = sizeof(cli);
 
     // Accept the data packet from client and verification
     connfd = accept(sockfd, (sockaddr *)&cli, &len);
     if (connfd < 0) {
-        printf("server acccept failed...\n");
         exit(0);
     }
-    else
-        printf("server acccept the client...\n");
 
     // Function for chatting between client and server
     func(connfd);
