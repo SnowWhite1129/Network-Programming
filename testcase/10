@@ -1,0 +1,2 @@
+cat -b -e -u test.html
+exit

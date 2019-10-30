@@ -1,0 +1,14 @@
+% Unknown command: [dog].
+% Unknown command: [dog].
+% <!test.html>
+<TITLE>Test</TITLE>
+<BODY>This is a <b>test</b> program
+for ras.
+</BODY>
+% % Unknown command: [dog].
+% % Unknown command: [dog].
+%    1 bin
+   2 npbin
+   3 test
+   4 test.html
+% 

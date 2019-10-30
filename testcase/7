@@ -1,0 +1,6 @@
+cat test.html |1
+cat > test7
+cat test7 | grep is
+removetag test.html > test7
+cat test7 | grep is
+exit
