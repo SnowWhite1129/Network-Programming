@@ -1,0 +1,9 @@
+removetag test.html |3
+noop
+removetag test.html |3
+number |3
+noop
+number |1
+
+sort | grep is
+exit

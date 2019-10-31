@@ -6,13 +6,14 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys.socket.h>
+#include <sys/socket.h>
 #include <iostream>
 #include <fcntl.h>
+#include <netinet/in.h>
+#include <dnet.h>
 #include "npshell.h"
 
 #define MAXLIST 1000
-#define MAX 1024
 #define READ_END 0
 #define WRITE_END 1
 
@@ -147,7 +148,11 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    }
 
         if (symbol == redirectout){
+<<<<<<< HEAD
             int out = open(parsed.at(parsed.size()-1).c_str(),O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
+=======
+            int out = open(parsed.at(parsed.size()-1).c_str(), O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
+>>>>>>> 35ede942a9d80b86dfdc7b9f73b62bb640bbe09c
             if (out == -1){
                 cout << "File open error." << endl;
                 return;
@@ -258,31 +263,29 @@ int main(){
         exit(0);
     }
 
-    int sockfd, connfd, len;
+    int sockfd, connfd;
+    unsigned int len;
     struct sockaddr_in servaddr, cli;
 
     // socket create and verification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(PF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         printf("socket creation failed...\n");
         exit(0);
     }
-    else
-        printf("Socket successfully created..\n");
+
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
+    servaddr.sin_family = PF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_port = htons(7001);
 
     // Binding newly created socket to given IP and verification
     if ((bind(sockfd, (sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed...\n");
         exit(0);
     }
-    else
-        printf("Socket successfully binded..\n");
 
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
@@ -292,7 +295,7 @@ int main(){
     len = sizeof(cli);
 
     // Accept the data packet from client and verification
-    connfd = accept(sockfd, (sockaddr *)&cli, &len);
+    connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
     if (connfd < 0) {
         exit(0);
     }

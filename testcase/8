@@ -1,0 +1,9 @@
+ls -1 | sort | dog
+dog | cat test.html > test
+cat test
+ls -1 | sort | cat |1
+dog
+ls -1 | sort |2
+dog
+number
+exit

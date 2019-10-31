@@ -1,0 +1,16 @@
+printenv PATH
+noop
+square
+setenv PATH npbin
+printenv PATH
+noop
+square
+setenv PATH bin:npbin
+printenv PATH
+noop
+square
+setenv PATH .
+printenv PATH
+noop
+square
+exit
