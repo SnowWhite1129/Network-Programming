@@ -22,20 +22,11 @@ using namespace std;
 command cmd[MAXLIST];
 void func(int sockfd)
 {
-    string buff;
-    int n;
     // infinite loop for chat
     while (true) {
         printf("%% ");
         if (!takeInput())
             continue;
-
-        write(sockfd, buff.c_str(), buff.size());
-
-        if (buff == "exit") {
-            close(sockfd);
-            break;
-        }
     }
 }
 void childHandler(int signo){
@@ -148,11 +139,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    }
 
         if (symbol == redirectout){
-<<<<<<< HEAD
-            int out = open(parsed.at(parsed.size()-1).c_str(),O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
-=======
             int out = open(parsed.at(parsed.size()-1).c_str(), O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
->>>>>>> 35ede942a9d80b86dfdc7b9f73b62bb640bbe09c
             if (out == -1){
                 cout << "File open error." << endl;
                 return;
@@ -253,53 +240,4 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
             close(cmd[0].fd[READ_END]);
         }
     }
-}
-
-int main(){
-    signal(SIGCHLD, childHandler);
-
-    if(!Init()){
-        printf("Init error\n");
-        exit(0);
-    }
-
-    int sockfd, connfd;
-    unsigned int len;
-    struct sockaddr_in servaddr, cli;
-
-    // socket create and verification
-    sockfd = socket(PF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-
-    bzero(&servaddr, sizeof(servaddr));
-
-    // assign IP, PORT
-    servaddr.sin_family = PF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(7001);
-
-    // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
-        printf("socket bind failed...\n");
-        exit(0);
-    }
-
-    // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
-        exit(0);
-    }
-
-    len = sizeof(cli);
-
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
-    if (connfd < 0) {
-        exit(0);
-    }
-
-    // Function for chatting between client and server
-    func(connfd);
 }
