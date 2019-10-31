@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #define MAX 1024
-#define PORT 8080
 void func(int sockfd)
 {
     char buff[MAX];
@@ -20,8 +19,9 @@ void func(int sockfd)
 
         while ((buff[n++] = getchar()) != '\n')
             ;
-        buff[n] = '\n';
+        buff[n] = '\0';
         write(sockfd, buff, sizeof(buff));
+
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
         printf("%s", buff);
