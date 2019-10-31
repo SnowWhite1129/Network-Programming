@@ -10,9 +10,9 @@ void func(int sockfd)
 {
     char buff[MAX];
     int n;
-    for (;;) {
-        bzero(buff, sizeof(buff));
-        printf("Enter the string : ");
+    bzero(buff, sizeof(buff));
+    read(sockfd, buff, sizeof(buff));
+    while(true) {
         n = 0;
         while ((buff[n++] = getchar()) != '\n')
             ;
@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
         printf("socket creation failed...\n");
         exit(0);
     }
-    else
-        printf("Socket successfully created..\n");
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
@@ -51,8 +49,6 @@ int main(int argc, char *argv[])
         printf("connection with the server failed...\n");
         exit(0);
     }
-    else
-        printf("connected to the server..\n");
 
     // function for chat
     func(sockfd);
