@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <dnet.h>
 #include "npshell.h"
 
 #define MAXLIST 1000
@@ -20,6 +19,21 @@
 using namespace std;
 
 command cmd[MAXLIST];
+void command::Init(const int fd1[2]) {
+    for (int i = 0; i < 2; ++i) {
+        fd[i] = fd1[i];
+    }
+}
+command& command::operator=(const command &tmp) {
+    for (int i = 0; i < 2; ++i) {
+        fd[i] = tmp.fd[i];
+    }
+}
+void command::Clean() {
+    for (int & i : fd) {
+        i = -1;
+    }
+}
 void func(int sockfd)
 {
     // infinite loop for chat

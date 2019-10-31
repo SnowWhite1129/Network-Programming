@@ -10,9 +10,8 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <dnet.h>
 #include "npshell.h"
-int main(){
+int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
 
     if(!Init()){

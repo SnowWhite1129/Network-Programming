@@ -10,9 +10,8 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <dnet.h>
 #include "npshell.h"
-int main(){
+int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
 
     if(!Init()){
@@ -25,7 +24,7 @@ int main(){
     struct sockaddr_in servaddr, cli;
 
     // socket create and verification
-    sockfd = socket(PF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         printf("socket creation failed...\n");
         exit(0);
@@ -34,9 +33,9 @@ int main(){
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
-    servaddr.sin_family = AF_INET;s
-    servaddr.sin_addr.s_addr = htonl("127.0.0.1");
-    servaddr.sin_port = htons(7001);
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(argv[0]);
 
     // Binding newly created socket to given IP and verification
     if ((bind(sockfd, (sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
