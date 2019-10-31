@@ -69,9 +69,9 @@ int main(int argc, char *argv[]){
             for (int i = 0; i < 3; ++i) {
                 close(i);
             }
-            dup2(sockfd, STDIN_FILENO);
-            dup2(sockfd, STDOUT_FILENO);
-            dup2(sockfd, STDERR_FILENO);
+            dup2(connfd, STDIN_FILENO);
+            dup2(connfd, STDOUT_FILENO);
+            dup2(connfd, STDERR_FILENO);
 
             func(connfd);
             exit(0);

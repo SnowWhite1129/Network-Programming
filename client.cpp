@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define MAX 80
+#define MAX 1024
 #define PORT 8080
 void func(int sockfd)
 {
@@ -19,9 +19,8 @@ void func(int sockfd)
         write(sockfd, buff, sizeof(buff));
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
-        printf("From Server : %s", buff);
+
         if ((strncmp(buff, "exit", 4)) == 0) {
-            printf("Client Exit...\n");
             break;
         }
     }
