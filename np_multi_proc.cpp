@@ -12,11 +12,7 @@
 #include <netinet/in.h>
 #include "npshell.h"
 
-#define MAXLIST 1000
-
 using namespace std;
-
-command cmd[MAXLIST];
 
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
