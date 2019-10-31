@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #define MAX 80
 #define PORT 8080
 void func(int sockfd)
@@ -26,7 +27,7 @@ void func(int sockfd)
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     int sockfd, connfd;
     struct sockaddr_in servaddr, cli;
@@ -43,11 +44,11 @@ int main()
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(chartoint(argv[0]));
 
     // connect the client socket to server socket
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         printf("connection with the server failed...\n");
         exit(0);
     }

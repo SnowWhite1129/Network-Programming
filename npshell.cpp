@@ -19,6 +19,7 @@
 using namespace std;
 
 command cmd[MAXLIST];
+
 unsigned int chartoint(char port[]){
     int n=0;
     for (unsigned int i = 0; i < strlen(port); ++i) {

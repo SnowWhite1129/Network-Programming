@@ -14,7 +14,6 @@ struct command{
     void Clean();
 };
 
-
 int takeInput();
 void execArgs(vector <string> &parsed, Symbol symbol);
 void execArgsPiped(vector <string> &parsed, Symbol symbol);
