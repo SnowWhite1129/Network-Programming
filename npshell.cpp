@@ -19,6 +19,14 @@
 using namespace std;
 
 command cmd[MAXLIST];
+unsigned int chartoint(char port[]){
+    int n=0;
+    for (unsigned int i = 0; i < strlen(port); ++i) {
+        n*=10;
+        n += port[i]-'0';
+    }
+    return n;
+}
 void command::Init(const int fd1[2]) {
     for (int i = 0; i < 2; ++i) {
         fd[i] = fd1[i];

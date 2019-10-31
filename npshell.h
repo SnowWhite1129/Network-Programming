@@ -25,5 +25,6 @@ bool Init();
 void argsFree(char **args);
 void func(int sockfd);
 void childHandler(int signo);
+unsigned int chartoint(char port[]);
 
 #endif //NETWORK_PROGRAMMING_NPSHELL_H
