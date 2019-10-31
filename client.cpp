@@ -20,9 +20,11 @@ void func(int sockfd)
 
         while ((buff[n++] = getchar()) != '\n')
             ;
+        buff[n] = '\n';
         write(sockfd, buff, sizeof(buff));
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
+        printf("%s", buff);
 
         if ((strncmp(buff, "exit", 4)) == 0) {
             break;
