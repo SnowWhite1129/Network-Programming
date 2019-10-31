@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(chartoint(argv[0]));
+    servaddr.sin_port = htons(atoi(argv[1]));
 
     // connect the client socket to server socket
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
