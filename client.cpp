@@ -12,8 +12,12 @@ void func(int sockfd)
     int n;
     bzero(buff, sizeof(buff));
     read(sockfd, buff, sizeof(buff));
+    printf("%s", buff);
+
     while(true) {
+        bzero(buff, sizeof(buff));
         n = 0;
+
         while ((buff[n++] = getchar()) != '\n')
             ;
         write(sockfd, buff, sizeof(buff));
