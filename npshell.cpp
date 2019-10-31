@@ -147,7 +147,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 	    }
 
         if (symbol == redirectout){
-            int out = open(parsed.at(parsed.size()-1).c_str(), O_RDWR|O_CREAT, 0666);
+            int out = open(parsed.at(parsed.size()-1).c_str(),O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
             if (out == -1){
                 cout << "File open error." << endl;
                 return;
@@ -171,7 +171,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
 
         args[length] = nullptr;
         if (execvp(args[0], args) < 0)
-            cout << "Unknown command: [" << args[0] << "]." << endl;
+            fprintf(stderr, "Unknown command: [%s].\n", args[0] );
         argsFree(args);
         exit(0);
     } else {
@@ -239,17 +239,13 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
         args[length] = NULL;
 
         if (execvp(args[0], args) < 0)
-            cout << "Could not execute [" << args[0] << "]." << endl;
+            fprintf(stderr, "Unknown command: [%s].\n", args[0]);
         argsFree(args);
         exit(0);
     } else {
         if (cmd[0].fd[READ_END]!=-1){
             close(cmd[0].fd[WRITE_END]);
             close(cmd[0].fd[READ_END]);
-        }
-        if (symbol != piped){
-            int status;
-            waitpid(pid, &status, 0);
         }
     }
 }
