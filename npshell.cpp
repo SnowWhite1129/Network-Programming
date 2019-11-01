@@ -1,5 +1,4 @@
 #include <utility>
-
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +11,6 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <winsock.h>
 #include "npshell.h"
 
 #define MAXLIST 1000

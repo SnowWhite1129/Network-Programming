@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include "npshell.h"
 
 using namespace std;
@@ -60,9 +61,9 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)servaddr , sizeof(servaddr)) < 0){
+    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
         printf("setsockopt failed\n");
-        close(socket_fd);
+        close(sockfd);
         exit(2);
     }
 
