@@ -13,6 +13,13 @@ struct command{
     void Init(const int fd1[2]);
     void Clean();
 };
+struct User{
+    string name, IP;
+    int ID, port;
+    static int n;
+    void Init(string IP1, int ID1, int port1);
+    void Delete();
+};
 
 int takeInput();
 void execArgs(vector <string> &parsed, Symbol symbol);
@@ -20,9 +27,18 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol);
 void Pop();
 int check(int n);
 void printenv(const string &name);
-bool Init();
+bool Init(User users[]);
 void argsFree(char **args);
-void func(int sockfd);
 void childHandler(int signo);
+void welcomeMessage();
+void loginMessage(const char IP[], int port);
+void logoutMessage(string name);
+void yellMessage(const char name[], const char message[]);
+void toldMessage(const char name[], const char message[]);
+void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID);
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID);
+void nouserMessage(int ID);
+void nomessageMessage(int senderID, int receiverID);
+void occuipiedMessage(int senderID, int receiverID);
 
 #endif //NETWORK_PROGRAMMING_NPSHELL_H

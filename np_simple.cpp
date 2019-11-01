@@ -14,10 +14,24 @@
 
 using namespace std;
 
+void chat(const struct sockaddr_in &client)
+{
+    // infinite loop for chat
+    while (true) {
+        welcomeMessage();
+        loginMessage(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+
+        printf("%% ");
+        if (!takeInput())
+            continue;
+    }
+}
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
 
-    if(!Init()){
+    User users[30];
+
+    if(!Init(users)){
         printf("Init error\n");
         exit(0);
     }
@@ -46,10 +60,17 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
+    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)servaddr , sizeof(servaddr)) < 0){
+        printf("setsockopt failed\n");
+        close(socket_fd);
+        exit(2);
+    }
+
     // Now server is ready to listen and verification
     if ((listen(sockfd, 5)) != 0) {
         exit(0);
     }
+
     while(true){
         len = sizeof(cli);
 
@@ -73,7 +94,7 @@ int main(int argc, char *argv[]){
             dup2(connfd, STDOUT_FILENO);
             dup2(connfd, STDERR_FILENO);
 
-            func(connfd);
+            chat(cli);
             exit(0);
         }
         close(connfd);

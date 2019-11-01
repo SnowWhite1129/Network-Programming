@@ -1,3 +1,5 @@
+#include <utility>
+
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -10,6 +12,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <winsock.h>
 #include "npshell.h"
 
 #define MAXLIST 1000
@@ -20,6 +23,50 @@ using namespace std;
 
 command cmd[MAXLIST];
 
+void User::Init(string IP1, int ID1, int port1) {
+    ID = ID1;
+    port = port1;
+    IP = move(IP1);
+    name = "(no name)";
+    ++n;
+}
+void User::Delete() {
+    ID = -1;
+    --n;
+}
+
+void welcomeMessage(){
+    cout << "***************************************\n"
+            "** Welcome to the information server **\n"
+            "***************************************" << endl;
+}
+void loginMessage(const char IP[], int port){
+    cout << "*** User '(no name)' entered from " << IP << ":" << port << ". ***" << endl;
+}
+void logoutMessage(string name){
+    cout << "*** User '(no name)' left. ***" << endl;
+}
+void yellMessage(const char name[], const char message[]){
+    cout << "*** " << name << " yelled ***: " << message << endl;
+}
+void toldMessage(const char name[], const char message[]){
+    cout << "*** " << name << " told you ***: " << message << endl;
+}
+void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID){
+    cout << "*** " << sendername << " " << "(#" << senderID <<  ") just piped '" << message <<" ' to " << receivername <<" (#" << receiverID << ") ***" << endl;
+}
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID){
+    cout << "*** " << receivername << " " << "(#" << receiverID <<  ") just received from '" << receivername <<" (#" << receiverID << ") " << "by '" << message << "' ***" << endl;
+}
+void nouserMessage(int ID){
+    cout << "*** Error: user #" << ID << " does not exist yet. ***";
+}
+void nomessageMessage(int senderID, int receiverID){
+    cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " does not exist yet. ***" << endl;
+}
+void occuipiedMessage(int senderID, int receiverID){
+    cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " already exists. ***" << endl;
+}
 void command::Init(const int fd1[2]) {
     for (int i = 0; i < 2; ++i) {
         fd[i] = fd1[i];
@@ -35,15 +82,7 @@ void command::Clean() {
         i = -1;
     }
 }
-void func(int sockfd)
-{
-    // infinite loop for chat
-    while (true) {
-        printf("%% ");
-        if (!takeInput())
-            continue;
-    }
-}
+
 void childHandler(int signo){
     int status;
     while (waitpid(-1, &status, WNOHANG) > 0);
@@ -117,7 +156,11 @@ void printenv(const string &name){
 	cout << getenv(name.c_str()) << endl;
 }
 
-bool Init(){
+bool Init(User users[]){
+    for (int i = 0; i < 30; ++i) {
+        users[i].ID = -1;
+    }
+    User::n = 0;
     for (auto & i : cmd)
         i.Clean();
 	return setenv("PATH", "bin:.", true)!=-1;
