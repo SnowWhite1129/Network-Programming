@@ -1,6 +1,13 @@
 # No pdf
 *.pdf
 *.html
+*.txt
+
+# No binary
+np_simple
+npshell
+np_single_proc
+np_multi_proc
 
 # No idea
 .idea/
