@@ -21,6 +21,7 @@ using namespace std;
 
 command cmd[MAXLIST];
 
+int User::n = 0;
 void User::Init(string IP1, int ID1, int port1) {
     ID = ID1;
     port = port1;
@@ -158,7 +159,6 @@ bool Init(User users[]){
     for (int i = 0; i < 30; ++i) {
         users[i].ID = -1;
     }
-    User::n = 0;
     for (auto & i : cmd)
         i.Clean();
 	return setenv("PATH", "bin:.", true)!=-1;
