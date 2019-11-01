@@ -18,10 +18,9 @@ using namespace std;
 void chat(const struct sockaddr_in &client)
 {
     // infinite loop for chat
+    welcomeMessage();
+    loginMessage(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
     while (true) {
-        welcomeMessage();
-        loginMessage(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-
         printf("%% ");
         if (!takeInput())
             continue;
