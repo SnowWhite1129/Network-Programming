@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include "npshell.h"
 
 using namespace std;
@@ -29,7 +30,9 @@ void chat(const struct sockaddr_in &client)
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
 
-    if(!Init()){
+    User users[30];
+
+    if(!Init(users)){
         printf("Init error\n");
         exit(0);
     }
@@ -58,9 +61,9 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)servaddr , sizeof(servaddr)) < 0){
+    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
         printf("setsockopt failed\n");
-        close(socket_fd);
+        close(sockfd);
         exit(2);
     }
 
@@ -68,6 +71,7 @@ int main(int argc, char *argv[]){
     if ((listen(sockfd, 5)) != 0) {
         exit(0);
     }
+
     while(true){
         len = sizeof(cli);
 
