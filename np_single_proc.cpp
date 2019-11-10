@@ -17,7 +17,19 @@
 
 using namespace std;
 
+
 command cmd[MAXLIST];
+
+User users[max_clients];
+
+void login(int newclient){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].fd!=-1){
+            dup2(users[i].fd, STDOUT_FILENO);
+            loginMessage(users[newclient].IP.c_str(), users[newclient].port);
+        }
+    }
+}
 
 int takeInput(){
     string line;
@@ -71,6 +83,7 @@ int takeInput(){
 bool Init(User users[]){
     for (int i = 0; i < 30; ++i) {
         users[i].ID = -1;
+        users[i].fd = -1;
     }
     for (auto & i : cmd)
         i.Clean();
@@ -209,32 +222,28 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
 
 void chat(const struct sockaddr_in &client)
 {
-    // infinite loop for chat
-    welcomeMessage();
-    loginMessage(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-    while (true) {
-        printf("%% ");
-        if (!takeInput())
-            continue;
-    }
+    takeInput();
+    cout << "% ";
 }
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
 
-    User users[30];
+
+    fd_set readfds;
+    int max_sd, sd;
 
     if(!Init(users)){
         printf("Init error\n");
         exit(0);
     }
 
-    int sockfd, connfd;
+    int master_socket, connfd;
     unsigned int len;
     struct sockaddr_in servaddr, cli;
 
     // socket create and verification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
+    master_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (master_socket < 0) {
         printf("socket creation failed...\n");
         exit(0);
     }
@@ -247,48 +256,86 @@ int main(int argc, char *argv[]){
     servaddr.sin_port = htons(atoi(argv[1]));
 
     // Binding newly created socket to given IP and verification
-    if ((bind(sockfd, (sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
+    if ((bind(master_socket, (sockaddr *)&servaddr, sizeof(servaddr))) != 0) {
         printf("socket bind failed...\n");
         exit(0);
     }
 
-    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
+    if(setsockopt(master_socket, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
         printf("setsockopt failed\n");
-        close(sockfd);
+        close(master_socket);
         exit(2);
     }
 
     // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) {
+    if ((listen(master_socket, 5)) != 0) {
         exit(0);
     }
 
     while(true){
+        FD_ZERO(&readfds);
+
+        FD_SET(master_socket, &readfds);
+        max_sd = master_socket;
+
+        //add child sockets to set
+        for (int i = 0 ; i < max_clients ; i++)
+        {
+            //socket descriptor
+            sd = users[i].fd;
+
+            //if valid socket descriptor then add to read list
+            if(sd > 0)
+                FD_SET(sd , &readfds);
+
+            //highest file descriptor number, need it for the select function
+            if(sd > max_sd)
+                max_sd = sd;
+        }
+
+        //wait for an activity on one of the sockets , timeout is NULL ,
+        //so wait indefinitely
+
+        while (select(max_sd + 1 , &readfds , NULL , NULL , NULL)<0);
+
         len = sizeof(cli);
 
-        // Accept the data packet from client and verification
-        connfd = accept(sockfd, (struct sockaddr *)&cli, &len);
-        if (connfd < 0) {
-            exit(0);
-        }
+        //If something happened on the master socket ,
+        //then its an incoming connection
+        if (FD_ISSET(master_socket, &readfds))
+        {
+            if (User::n == 30)
+                continue;
 
-        pid_t pid;
-        while((pid=fork())<0){
-            usleep(1000);
-        }
-        if (pid == 0){
-            close(sockfd);
-            // Function for chatting between client and server
-            for (int i = 0; i < 3; ++i) {
-                close(i);
+            connfd = accept(master_socket, (struct sockaddr *)&cli, &len);
+            while (connfd < 0){
+                connfd = accept(master_socket, (struct sockaddr *)&cli, &len);
             }
-            dup2(connfd, STDIN_FILENO);
-            dup2(connfd, STDOUT_FILENO);
-            dup2(connfd, STDERR_FILENO);
+            User tmp;
+            tmp.Init(inet_ntoa(cli.sin_addr), 0, ntohs(cli.sin_port), connfd);
 
-            chat(cli);
-            exit(0);
+            int newclient = addUser(tmp, users);
+
+            dup2(connfd, STDOUT_FILENO);
+            welcomeMessage();
+
+            login(newclient);
+            //dup2(connfd, STDOUT_FILENO);
+            cout << "% ";
         }
-        close(connfd);
+
+        //else its some IO operation on some other socket
+        for (int i = 0; i < max_clients; i++)
+        {
+            sd = users[i].fd;
+
+            if (FD_ISSET(sd , &readfds))
+            {
+                dup2(sd, STDIN_FILENO);
+                dup2(sd, STDOUT_FILENO);
+                dup2(sd, STDERR_FILENO);
+                chat(cli);
+            }
+        }
     }
 }
