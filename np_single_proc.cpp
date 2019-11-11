@@ -203,6 +203,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         if (symbol == userpipe){
             pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
             pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
+            fprintf(stderr, "%d %d\n", clientID, stdpipe.writefd);
         }
     } else {
         for (int i = 0; i < 2; ++i)
