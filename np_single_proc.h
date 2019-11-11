@@ -13,6 +13,6 @@ int takeInput();
 void printenv(const string &name);
 bool Init(User users[]);
 void argsFree(char **args);
-void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe);
-void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe);
+bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe);
+bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe);
 void chat(const struct sockaddr_in &client);

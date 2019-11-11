@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
+#include <unistd.h>
 
 using namespace std;
 void welcomeMessage(int fd){
@@ -38,7 +39,7 @@ void toldMessage(const char name[], const char message[], int fd){
     write(fd, buffer, strlen(buffer));
     //cout << "*** " << name << " told you ***: " << message << endl;
 }
-void writeMessage(const char writeername[], int writeerID, const char message[], const char receivername[], int receiverID, int fd){
+void sendMessage(const char writeername[], int writeerID, const char message[], const char receivername[], int receiverID, int fd){
     char buffer[1025];
     sprintf(buffer, "*** %s(#%d) just piped %s to %s (#%d) ***\n", writeername, writeerID, message, receivername, receiverID);
     write(fd, buffer, strlen(buffer));

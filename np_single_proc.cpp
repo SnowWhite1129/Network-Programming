@@ -37,6 +37,20 @@ void logout(int newclient){
         }
     }
 }
+void recieve(int receiverID, int senderID, const string &message){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].fd!=-1){
+            receiveMessage(users[receiverID].name.c_str(), receiverID, message.c_str(), users[senderID].name.c_str(), senderID, users[i].fd);
+        }
+    }
+}
+void send(int senderID, int receiverID, const string &message){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].fd!=-1){
+            sendMessage(users[senderID].name.c_str(), senderID, message.c_str(), users[receiverID].name.c_str(), receiverID, users[i].fd);
+        }
+    }
+}
 
 int takeInput(int clientID){
     string line;
@@ -56,6 +70,7 @@ int takeInput(int clientID){
     Pipe stdpipe;
     stdpipe.readfd = STDIN_FILENO;
     stdpipe.writefd = STDOUT_FILENO;
+    int receiverID, senderID;
 
     while (iss >> str){
         if (str[0] == '|'){
@@ -72,7 +87,8 @@ int takeInput(int clientID){
         } else if (str[0] == '>'){
             if (str.length()>1){
                 symbol = userpipe;
-                stdpipe.writefd = stoi(str.substr(1));
+                receiverID = stoi(str.substr(1));
+                stdpipe.writefd = receiverID;
             } else{
                 symbol = redirectout;
             }
@@ -80,8 +96,9 @@ int takeInput(int clientID){
         } else if (str[0] == '<'){
             if (symbol != redirectout)
                 symbol = normal;
-            stdpipe.readfd = pipe_table[stoi(str.substr(1))][clientID].readfd;
-            stdpipe.writefd = pipe_table[stoi(str.substr(1))][clientID].writefd;
+            senderID = stoi(str.substr(1));
+            stdpipe.readfd = pipe_table[senderID][clientID].readfd;
+            stdpipe.writefd = pipe_table[senderID][clientID].writefd;
             continue;
         } else {
             args.push_back(str);
@@ -95,7 +112,14 @@ int takeInput(int clientID){
     }
 
     if (symbol == normal || symbol == redirectout){
-        execArgs(args, symbol, clientID, stdpipe);
+        if (execArgs(args, symbol, clientID, stdpipe) && stdpipe.readfd!=STDIN_FILENO){
+            recieve(clientID, senderID, line);
+        }
+        Pop(cmd);
+    } else if (symbol == userpipe){
+        if (execArgsPiped(args, symbol, clientID, stdpipe) ){
+            send(clientID, receiverID, line);
+        }
         Pop(cmd);
     }
     return true;
@@ -112,7 +136,7 @@ bool Init(User users[]){
 }
 
 // Function where the system command is executed
-void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe){
+bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe){
     if (parsed.at(0)=="exit"){
         logout(clientID);
         users[clientID].Delete();
@@ -121,10 +145,10 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
             exit(0);
         }
-        return;
+        return true;
     } else if(parsed.at(0) == "printenv"){
         printenv(parsed.at(1));
-        return;
+        return true;
     }
 
     // Forking a child
@@ -143,7 +167,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             int out = open(parsed.at(parsed.size()-1).c_str(), O_WRONLY|O_CREAT| O_TRUNC, S_IRUSR | S_IWUSR);
             if (out == -1){
                 cout << "File open error." << endl;
-                return;
+                return false;
             }
             close(STDOUT_FILENO);
             dup2(out, STDOUT_FILENO);
@@ -178,11 +202,12 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         }
         int status;
         waitpid(pid, &status, 0);
+        return true;
     }
 }
 
 // Function where the piped system commands is executed
-void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe)
+bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe)
 {
     int fd[2], n=1;
     pid_t pid;
@@ -190,23 +215,28 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     if (symbol != piped)
         n = stoi(parsed.at(parsed.size()-1));
 
+    if (symbol == userpipe){
+        if (users[stdpipe.writefd].ID == -1){
+            nouserMessage(clientID, users[clientID].fd);
+            return false;
+        } else{
+            pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
+            pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
+            fprintf(stderr, "%d %d\n", clientID, stdpipe.writefd);
+        }
+    }
+
     int prevfd = check(cmd, n);
 
     if (prevfd == -1) {
         if (pipe(fd) < 0) {
             cout << "Pipe could not be initialized" << endl;
-            return;
+            return false;
         }
         cmd[n].Init(fd);
     } else {
         for (int i = 0; i < 2; ++i)
             fd[i] = cmd[n].fd[i];
-    }
-
-    if (symbol == userpipe){
-        pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
-        pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
-        fprintf(stderr, "%d %d\n", clientID, stdpipe.writefd);
     }
 
     while((pid=fork())<0){
@@ -254,13 +284,14 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
+        return true;
     }
 }
 
 void chat(const struct sockaddr_in &client, int clientID)
 {
     takeInput(clientID);
-    cout << "% ";
+    write(users[clientID].fd, "% ", strlen("% ")) ;
 }
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
