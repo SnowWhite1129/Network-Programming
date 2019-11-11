@@ -112,7 +112,7 @@ int takeInput(int clientID){
     }
 
     if (symbol == normal || symbol == redirectout){
-        if (execArgs(args, symbol, clientID, stdpipe) && stdpipe.readfd!=STDIN_FILENO){
+        if (execArgs(args, symbol, clientID, stdpipe) && stdpipe.readfd != STDIN_FILENO){
             recieve(clientID, senderID, line);
         }
         Pop(cmd);

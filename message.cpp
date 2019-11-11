@@ -40,14 +40,15 @@ void toldMessage(const char name[], const char message[], int fd){
     //cout << "*** " << name << " told you ***: " << message << endl;
 }
 void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, int fd){
-    char buffer[1025];
-    sprintf(buffer, "*** %s(#%d) just piped \'%s\' to %s (#%d) ***\n", sendername, senderID+1, message, receivername, receiverID+1);
+    char buffer[1025] = {0};
+    sprintf(buffer, "*** %s(#%d) just piped '%s' to %s (#%d) ***\n",
+            sendername, senderID+1, message, receivername, receiverID+1);
     write(fd, buffer, strlen(buffer));
     //cout << "*** " << sendername << " " << "(#" << senderID <<  ") just piped '" << message <<" ' to " << receivername <<" (#" << receiverID << ") ***" << endl;
 }
 void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, int fd){
-    char buffer[1025];
-    sprintf(buffer, "*** %s(#%d) just received from %s (#%d) by \'%s\' ***\n", receivername, receiverID+1, sendername, senderID+1, message);
+    char buffer[1025] = {0};
+    sprintf(buffer, "*** %s(#%d) just received from %s (#%d) by '%s' ***\n", receivername, receiverID+1, sendername, senderID+1, message);
     write(fd, buffer, strlen(buffer));
     //cout << "*** " << receivername << " " << "(#" << receiverID <<  ") just received from '" << receivername <<" (#" << receiverID << ") " << "by '" << message << "' ***" << endl;
 }
