@@ -74,8 +74,7 @@ int takeInput(int clientID){
         } else if (str[0] == '>'){
             if (str.length()>1){
                 symbol = userpipe;
-                stdpipe.readfd = stoi(str.substr(1));
-                stdpipe.writefd = clientID;
+                stdpipe.writefd = stoi(str.substr(1));
             } else{
                 symbol = redirectout;
             }
@@ -201,8 +200,10 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             return;
         }
         cmd[n].Init(fd);
-        pipe_table[clientID][stdpipe.readfd].readfd = fd[READ_END];
-        pipe_table[clientID][stdpipe.readfd].writefd = fd[WRITE_END];
+        if (symbol == userpipe){
+            pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
+            pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
+        }
     } else {
         for (int i = 0; i < 2; ++i)
             fd[i] = cmd[n].fd[i];
