@@ -140,7 +140,8 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     if (parsed.at(0)=="exit"){
         logout(clientID);
         users[clientID].Delete();
-        close(clientID);
+        close(users[clientID].fd);
+        return true;
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
             exit(0);
