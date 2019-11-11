@@ -4,7 +4,7 @@
 #include <string>
 
 using namespace std;
-enum Symbol {piped, numberpiped, numberexplamation, redirectout, normal};
+enum Symbol {piped, numberpiped, numberexplamation, redirectout, userpipe, normal};
 void childHandler(int signo);
 void printenv(const string &name);
 void argsFree(char **args);

@@ -10,7 +10,7 @@ void loginMessage(const char IP[], int port){
     cout << "*** User '(no name)' entered from " << IP << ":" << port << ". ***" << endl;
 }
 void logoutMessage(string name){
-    cout << "*** User '(no name)' left. ***" << endl;
+    cout << "*** User '" << name <<"' left. ***" << endl;
 }
 void yellMessage(const char name[], const char message[]){
     cout << "*** " << name << " yelled ***: " << message << endl;

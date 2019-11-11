@@ -14,13 +14,14 @@
 #include "command.h"
 #include "np_single_proc.h"
 #include "message.h"
+#include "nppipe.h"
 
 using namespace std;
-
 
 command cmd[MAXLIST];
 
 User users[max_clients];
+Pipe pipe_table[max_clients][max_clients];
 
 void login(int newclient){
     for (int i = 0; i < max_clients; ++i) {
@@ -30,8 +31,16 @@ void login(int newclient){
         }
     }
 }
+void logout(int newclient){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].fd!=-1){
+            dup2(users[i].fd, STDOUT_FILENO);
+            logoutMessage(users[newclient].name);
+        }
+    }
+}
 
-int takeInput(){
+int takeInput(int clientID){
     string line;
     Symbol symbol = normal;
     if (!getline(cin, line)){
@@ -46,6 +55,9 @@ int takeInput(){
     string str;
 
     vector <string> args;
+    Pipe stdpipe;
+    stdpipe.readfd = STDIN_FILENO;
+    stdpipe.writefd = STDOUT_FILENO;
 
     while (iss >> str){
         if (str[0] == '|'){
@@ -60,7 +72,19 @@ int takeInput(){
             str = str.substr(1);
             args.push_back(str);
         } else if (str[0] == '>'){
-            symbol = redirectout;
+            if (str.length()>1){
+                symbol = userpipe;
+                stdpipe.readfd = stoi(str.substr(1));
+                stdpipe.writefd = clientID;
+            } else{
+                symbol = redirectout;
+            }
+            continue;
+        } else if (str[0] == '<'){
+            if (symbol != redirectout)
+                symbol = normal;
+            stdpipe.readfd = pipe_table[stoi(str.substr(1))][clientID].readfd;
+            stdpipe.writefd = pipe_table[stoi(str.substr(1))][clientID].writefd;
             continue;
         } else {
             args.push_back(str);
@@ -68,13 +92,13 @@ int takeInput(){
                 symbol = normal;
             continue;
         }
-        execArgsPiped(args, symbol);
+        execArgsPiped(args, symbol, clientID, stdpipe);
         Pop(cmd);
         args.clear();
     }
 
     if (symbol == normal || symbol == redirectout){
-        execArgs(args, symbol);
+        execArgs(args, symbol, clientID, stdpipe);
         Pop(cmd);
     }
     return true;
@@ -91,9 +115,11 @@ bool Init(User users[]){
 }
 
 // Function where the system command is executed
-void execArgs(vector <string> &parsed, Symbol symbol){
+void execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe){
     if (parsed.at(0)=="exit"){
-        exit(0);
+        logout(clientID);
+        users[clientID].Delete();
+        close(clientID);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
             exit(0);
@@ -112,7 +138,7 @@ void execArgs(vector <string> &parsed, Symbol symbol){
     if (pid == 0) {
         if (cmd[0].fd[READ_END]!=-1){
             close(cmd[0].fd[WRITE_END]);
-            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
+            dup2(cmd[0].fd[READ_END], stdpipe.readfd);
             close(cmd[0].fd[READ_END]);
         }
 
@@ -149,13 +175,17 @@ void execArgs(vector <string> &parsed, Symbol symbol){
             close(cmd[0].fd[WRITE_END]);
             close(cmd[0].fd[READ_END]);
         }
+        if (stdpipe.readfd!=STDIN_FILENO){
+            close(stdpipe.readfd);
+            close(stdpipe.writefd);
+        }
         int status;
         waitpid(pid, &status, 0);
     }
 }
 
 // Function where the piped system commands is executed
-void execArgsPiped(vector <string> &parsed, Symbol symbol)
+void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe)
 {
     int fd[2], n=1;
     pid_t pid;
@@ -171,6 +201,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
             return;
         }
         cmd[n].Init(fd);
+        pipe_table[clientID][stdpipe.readfd].readfd = fd[READ_END];
+        pipe_table[clientID][stdpipe.readfd].writefd = fd[WRITE_END];
     } else {
         for (int i = 0; i < 2; ++i)
             fd[i] = cmd[n].fd[i];
@@ -217,17 +249,20 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
             close(cmd[0].fd[WRITE_END]);
             close(cmd[0].fd[READ_END]);
         }
+        if (stdpipe.readfd!=STDIN_FILENO){
+            close(stdpipe.readfd);
+            close(stdpipe.writefd);
+        }
     }
 }
 
-void chat(const struct sockaddr_in &client)
+void chat(const struct sockaddr_in &client, int clientID)
 {
-    takeInput();
+    takeInput(clientID);
     cout << "% ";
 }
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
-
 
     fd_set readfds;
     int max_sd, sd;
@@ -320,7 +355,7 @@ int main(int argc, char *argv[]){
             welcomeMessage();
 
             login(newclient);
-            //dup2(connfd, STDOUT_FILENO);
+            dup2(connfd, STDOUT_FILENO);
             cout << "% ";
         }
 
@@ -334,7 +369,7 @@ int main(int argc, char *argv[]){
                 dup2(sd, STDIN_FILENO);
                 dup2(sd, STDOUT_FILENO);
                 dup2(sd, STDERR_FILENO);
-                chat(cli);
+                chat(cli, i);
             }
         }
     }
