@@ -60,6 +60,16 @@ int takeInput(int clientID){
         exit(0);
     }
 
+    string tmp = "";
+    for(int i = 0; i < line.length(); i++)
+    {
+        fflush(stdout);
+        if(line[i] != '\r'){
+            tmp += line[i];
+        }
+    }
+    line = tmp;
+
     if (line.length()==0)
         return false;
 
