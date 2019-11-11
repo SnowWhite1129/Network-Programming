@@ -9,3 +9,5 @@ test:
 	g++ -std=c++14 client.cpp -o client
 client:
 	g++ -std=c++14 client.cpp -o client
+single:
+	g++ -std=c++14 npshell.cpp user.cpp message.cpp command.cpp nppipe.cpp np_single_proc.cpp -o np_single_proc

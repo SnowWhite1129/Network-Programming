@@ -30,3 +30,13 @@ int addUser(const User &client, User users[]){
     }
     return -1;
 }
+bool duplicateUser(const string &name, User users[]){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].ID != -1){
+            if (name == users[i].name){
+                return true;
+            }
+        }
+    }
+    return false;
+}

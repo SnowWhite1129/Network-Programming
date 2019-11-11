@@ -51,6 +51,28 @@ void send(int senderID, int receiverID, const string &message){
         }
     }
 }
+void yell(int clientID, const string& message){
+    for (int i = 0; i < max_clients; ++i) {
+        if (users[i].ID != -1){
+            yellMessage(users[i].name.c_str(), message.c_str(), users[i].fd);
+        }
+    }
+}
+void tell(int sender, int receiver, const string& message){
+    toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
+}
+void who(int clientID){
+    whoMessage(clientID, users, users[clientID].fd);
+}
+void name(int clientID, const string &name){
+    if (duplicateUser(name, users)){
+        duplicatNameMessage(name.c_str(), users[clientID].fd);
+    } else{
+        for (int i = 0; i < max_clients; ++i) {
+            nameMessage(users[clientID].IP.c_str(), users[clientID].port, name.c_str(), users[i].fd);
+        }
+    }
+}
 
 int takeInput(int clientID){
     string line;
@@ -77,9 +99,11 @@ int takeInput(int clientID){
     string str;
 
     vector <string> args;
-    Pipe stdpipe;
+    Pipe stdpipe, ID;
     stdpipe.readfd = STDIN_FILENO;
     stdpipe.writefd = STDOUT_FILENO;
+    ID.readfd = -1;
+    ID.writefd = -1;
     int receiverID, senderID;
 
     while (iss >> str){
@@ -97,8 +121,8 @@ int takeInput(int clientID){
         } else if (str[0] == '>'){
             if (str.length()>1){
                 symbol = userpipe;
-                receiverID = stoi(str.substr(1));
-                stdpipe.writefd = receiverID;
+                receiverID = stoi(str.substr(1))-1;
+                ID.writefd = receiverID;
             } else{
                 symbol = redirectout;
             }
@@ -106,7 +130,8 @@ int takeInput(int clientID){
         } else if (str[0] == '<'){
             if (symbol != redirectout)
                 symbol = normal;
-            senderID = stoi(str.substr(1));
+            senderID = stoi(str.substr(1))-1;
+            ID.readfd = senderID;
             stdpipe.readfd = pipe_table[senderID][clientID].readfd;
             stdpipe.writefd = pipe_table[senderID][clientID].writefd;
             continue;
@@ -116,20 +141,16 @@ int takeInput(int clientID){
                 symbol = normal;
             continue;
         }
-        execArgsPiped(args, symbol, clientID, stdpipe);
+        execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
         Pop(cmd);
         args.clear();
     }
 
     if (symbol == normal || symbol == redirectout){
-        if (execArgs(args, symbol, clientID, stdpipe) && stdpipe.readfd != STDIN_FILENO){
-            recieve(clientID, senderID, line);
-        }
+        execArgs(args, symbol, clientID, stdpipe, ID, line);
         Pop(cmd);
     } else if (symbol == userpipe){
-        if (execArgsPiped(args, symbol, clientID, stdpipe) ){
-            send(clientID, receiverID, line);
-        }
+        execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
         Pop(cmd);
     }
     return true;
@@ -150,7 +171,7 @@ bool Init(User users[]){
 }
 
 // Function where the system command is executed
-bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe){
+bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line){
     if (parsed.at(0)=="exit"){
         logout(clientID);
         users[clientID].Delete();
@@ -164,11 +185,27 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     } else if(parsed.at(0) == "printenv"){
         printenv(parsed.at(1));
         return true;
+    } else if (parsed.at(0) == "yell"){
+        yell(clientID, parsed.at(1));
+    } else if (parsed.at(0) == "who"){
+        who(clientID);
+    } else if (parsed.at(0) == "name"){
+        name(clientID, parsed.at(1));
+    } else if (parsed.at(0) == "tell"){
+        tell(clientID, stoi(parsed.at(1)), parsed.at(2));
     }
 
-    if (stdpipe.readfd != STDIN_FILENO){
-        if (){
-
+    if (ID.readfd != -1){
+        if (users[ID.readfd].ID ==-1){
+            nouserMessage(ID.readfd, users[clientID].fd);
+            return false;
+        } else{
+            if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+                nomessageMessage(ID.readfd, clientID, users[clientID].fd);
+                return false;
+            } else{
+                recieve(clientID, ID.readfd, line);
+            }
         }
     }
 
@@ -180,8 +217,13 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     if (pid == 0) {
         if (cmd[0].fd[READ_END]!=-1){
             close(cmd[0].fd[WRITE_END]);
-            dup2(cmd[0].fd[READ_END], stdpipe.readfd);
+            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
             close(cmd[0].fd[READ_END]);
+        }
+        if (ID.readfd != -1) {
+            close(stdpipe.writefd);
+            dup2(stdpipe.readfd, STDIN_FILENO);
+            close(stdpipe.readfd);
         }
 
         if (symbol == redirectout){
@@ -217,7 +259,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             close(cmd[0].fd[WRITE_END]);
             close(cmd[0].fd[READ_END]);
         }
-        if (stdpipe.readfd!=STDIN_FILENO){
+        if (ID.readfd != -1){
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
@@ -228,27 +270,13 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
 }
 
 // Function where the piped system commands is executed
-bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe)
+bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line)
 {
     int fd[2], n=1;
     pid_t pid;
 
     if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
-
-    if (symbol == userpipe){
-        if (users[stdpipe.writefd].ID == -1){
-            nouserMessage(clientID, users[clientID].fd);
-            return false;
-        } else{
-            if (checkPipeExist(clientID, stdpipe.writefd, pipe_table)){
-                occuipiedMessage(clientID, stdpipe.writefd, clientID);
-            } else{
-                pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
-                pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
-            }
-        }
-    }
 
     int prevfd = check(cmd, n);
 
@@ -261,6 +289,35 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     } else {
         for (int i = 0; i < 2; ++i)
             fd[i] = cmd[n].fd[i];
+    }
+
+    if (symbol == userpipe){
+        if (users[ID.writefd].ID == -1){
+            nouserMessage(clientID, users[clientID].fd);
+            return false;
+        } else{
+            if (checkPipeExist(clientID, ID.writefd, pipe_table)){
+                occuipiedMessage(clientID, ID.writefd, clientID);
+                return false;
+            } else{
+                pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
+                pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
+                send(clientID, ID.writefd, line);
+            }
+        }
+        if (ID.readfd != -1){
+            if (users[ID.readfd].ID ==-1){
+                nouserMessage(ID.readfd, users[clientID].fd);
+                return false;
+            } else{
+                if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+                    nomessageMessage(ID.readfd, clientID, users[clientID].fd);
+                    return false;
+                } else{
+                    recieve(clientID, ID.readfd, line);
+                }
+            }
+        }
     }
 
     while((pid=fork())<0){
@@ -277,6 +334,11 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             close(cmd[0].fd[WRITE_END]);
             dup2(cmd[0].fd[READ_END], STDIN_FILENO);
             close(cmd[0].fd[READ_END]);
+        }
+        if (ID.readfd != -1) {
+            close(stdpipe.writefd);
+            dup2(stdpipe.readfd, STDIN_FILENO);
+            close(stdpipe.readfd);
         }
 
         for (int i = 3; i < 1024; ++i)
@@ -304,7 +366,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             close(cmd[0].fd[WRITE_END]);
             close(cmd[0].fd[READ_END]);
         }
-        if (stdpipe.readfd!=STDIN_FILENO){
+        if (ID.readfd != -1){
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }

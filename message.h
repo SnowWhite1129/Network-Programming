@@ -1,9 +1,9 @@
 #ifndef NETWORK_PROGRAMMING_MESSAGE_H
 #define NETWORK_PROGRAMMING_MESSAGE_H
 
-#endif //NETWORK_PROGRAMMING_MESSAGE_H
-
 #include <string>
+#include "user.h"
+
 using namespace std;
 void welcomeMessage(int fd);
 void loginMessage(const char IP[], int port, int fd);
@@ -15,3 +15,10 @@ void receiveMessage(const char receivername[], int receiverID, const char messag
 void nouserMessage(int ID, int fd);
 void nomessageMessage(int senderID, int receiverID, int fd);
 void occuipiedMessage(int senderID, int receiverID, int fd);
+void nameMessage(const char IP[], int port, const char name[], int fd);
+void duplicatNameMessage(const char name[], int fd);
+void whoMessage(int clientID, const User users[], int fd);
+void userMessage(const User &user, int fd);
+
+#endif //NETWORK_PROGRAMMING_MESSAGE_H
+

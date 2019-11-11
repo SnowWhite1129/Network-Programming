@@ -1,8 +1,6 @@
 #ifndef NETWORK_PROGRAMMING_USER_H
 #define NETWORK_PROGRAMMING_USER_H
 
-#endif //NETWORK_PROGRAMMING_USER_H
-
 #include <string>
 
 #define max_clients 30
@@ -17,3 +15,7 @@ struct User{
     User& operator=(const User &user);
 };
 int addUser(const User &client, User users[]);
+bool duplicateUser(const string &name, User users[]);
+#endif //NETWORK_PROGRAMMING_USER_H
+
+
