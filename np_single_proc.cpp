@@ -136,9 +136,13 @@ int takeInput(int clientID){
 }
 
 bool Init(User users[]){
-    for (int i = 0; i < 30; ++i) {
+    for (int i = 0; i < max_clients; ++i) {
         users[i].ID = -1;
         users[i].fd = -1;
+        for (int j = 0; j < max_clients; ++j) {
+            pipe_table[i][j].readfd = -1;
+            pipe_table[i][j].writefd = -1;
+        }
     }
     for (auto & i : cmd)
         i.Clean();
@@ -160,6 +164,12 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     } else if(parsed.at(0) == "printenv"){
         printenv(parsed.at(1));
         return true;
+    }
+
+    if (stdpipe.readfd != STDIN_FILENO){
+        if (){
+
+        }
     }
 
     // Forking a child
@@ -231,9 +241,12 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             nouserMessage(clientID, users[clientID].fd);
             return false;
         } else{
-            pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
-            pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
-            fprintf(stderr, "%d %d\n", clientID, stdpipe.writefd);
+            if (checkPipeExist(clientID, stdpipe.writefd, pipe_table)){
+                occuipiedMessage(clientID, stdpipe.writefd, clientID);
+            } else{
+                pipe_table[clientID][stdpipe.writefd].readfd = fd[READ_END];
+                pipe_table[clientID][stdpipe.writefd].writefd = fd[WRITE_END];
+            }
         }
     }
 
