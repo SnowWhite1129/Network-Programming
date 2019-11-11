@@ -5,7 +5,7 @@
 
 #include <string>
 using namespace std;
-void welcomeMessage(, int fd);
+void welcomeMessage(int fd);
 void loginMessage(const char IP[], int port, int fd);
 void logoutMessage(const char name[], int fd);
 void yellMessage(const char name[], const char message[], int fd);

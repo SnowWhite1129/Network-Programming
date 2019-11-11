@@ -33,7 +33,7 @@ void logout(int newclient){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].fd!=-1){
             dup2(users[i].fd, STDOUT_FILENO);
-            logoutMessage(users[newclient].name);
+            logoutMessage(users[newclient].name.c_str(), users[newclient].fd);
         }
     }
 }
@@ -297,7 +297,7 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    if(setsockopt(master_socket, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
+    if(setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
         printf("setsockopt failed\n");
         close(master_socket);
         exit(2);
@@ -352,10 +352,10 @@ int main(int argc, char *argv[]){
 
             int newclient = addUser(tmp, users);
 
-            welcomeMessage();
+            welcomeMessage(users[newclient].fd);
 
             loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[newclient].fd);
-            send(users[newclient].fd, "% ", strlen("% "));
+            write(users[newclient].fd, "% ", strlen("% "));
             login(newclient);
         }
 

@@ -9,7 +9,7 @@ void welcomeMessage(int fd){
     sprintf(buffer, "***************************************\n"
             "** Welcome to the information server **\n"
             "***************************************\n");
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
 //    cout << "***************************************\n"
 //            "** Welcome to the information server **\n"
 //            "***************************************" << endl;
@@ -17,54 +17,54 @@ void welcomeMessage(int fd){
 void loginMessage(const char IP[], int port, int fd){
     char buffer[1025];
     sprintf(buffer, "*** User '(no name)' entered from %s:%d. ***\n", IP, port);
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
     //cout << "*** User '(no name)' entered from " << IP << ":" << port << ". ***" << endl;
 }
 void logoutMessage(const char name[], int fd){
     char buffer[1025];
     sprintf(buffer, "*** User '%s' left. ***\n", name);
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
     //cout << "*** User '" << name <<"' left. ***" << endl;
 }
 void yellMessage(const char name[], const char message[], int fd){
     char buffer[1025];
     sprintf(buffer, "*** %s yelled ***: %s\n", name, message);
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
     //cout << "*** " << name << " yelled ***: " << message << endl;
 }
 void toldMessage(const char name[], const char message[], int fd){
     char buffer[1025];
     sprintf(buffer, "*** %s told you ***: %s\n", name, message);
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
     //cout << "*** " << name << " told you ***: " << message << endl;
 }
-void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, int fd){
+void writeMessage(const char writeername[], int writeerID, const char message[], const char receivername[], int receiverID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** %s(#%d) just piped %s to %s (#%d) ***\n", sendername, senderID, message, receivername, receiverID);
-    send(fd, buffer, strlen(buffer));
-    //cout << "*** " << sendername << " " << "(#" << senderID <<  ") just piped '" << message <<" ' to " << receivername <<" (#" << receiverID << ") ***" << endl;
+    sprintf(buffer, "*** %s(#%d) just piped %s to %s (#%d) ***\n", writeername, writeerID, message, receivername, receiverID);
+    write(fd, buffer, strlen(buffer));
+    //cout << "*** " << writeername << " " << "(#" << writeerID <<  ") just piped '" << message <<" ' to " << receivername <<" (#" << receiverID << ") ***" << endl;
 }
-void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, int fd){
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char writeername[], int writeerID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** %s(#%d) just received from %s (#%d) by '%s' ***\n", receivername, receiverID, sendername, senderID, message);
-    send(fd, buffer, strlen(buffer));
+    sprintf(buffer, "*** %s(#%d) just received from %s (#%d) by '%s' ***\n", receivername, receiverID, writeername, writeerID, message);
+    write(fd, buffer, strlen(buffer));
     //cout << "*** " << receivername << " " << "(#" << receiverID <<  ") just received from '" << receivername <<" (#" << receiverID << ") " << "by '" << message << "' ***" << endl;
 }
 void nouserMessage(int ID, int fd){
     char buffer[1025];
     sprintf(buffer, "*** Error: user #%d does not exist yet. ***\n", ID);
-    send(fd, buffer, strlen(buffer));
+    write(fd, buffer, strlen(buffer));
     //cout << "*** Error: user #" << ID << " does not exist yet. ***";
 }
-void nomessageMessage(int senderID, int receiverID, int fd){
+void nomessageMessage(int writeerID, int receiverID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** Error: the pipe #%d->#%d does not exist yet. ***\n", senderID, receiverID);
-    send(fd, buffer, strlen(buffer));
-    //cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " does not exist yet. ***" << endl;
+    sprintf(buffer, "*** Error: the pipe #%d->#%d does not exist yet. ***\n", writeerID, receiverID);
+    write(fd, buffer, strlen(buffer));
+    //cout << "*** Error: the pipe #" << writeerID << "->#" << receiverID << " does not exist yet. ***" << endl;
 }
-void occuipiedMessage(int senderID, int receiverID, int fd){
+void occuipiedMessage(int writeerID, int receiverID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** Error: the pipe #%d->#%d already exists. ***\n", senderID, receiverID);
-    send(fd, buffer, strlen(buffer));
-    //cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " already exists. ***" << endl;
+    sprintf(buffer, "*** Error: the pipe #%d->#%d already exists. ***\n", writeerID, receiverID);
+    write(fd, buffer, strlen(buffer));
+    //cout << "*** Error: the pipe #" << writeerID << "->#" << receiverID << " already exists. ***" << endl;
 }
