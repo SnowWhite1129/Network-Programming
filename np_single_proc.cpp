@@ -25,10 +25,8 @@ Pipe pipe_table[max_clients][max_clients];
 
 void login(int newclient){
     for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd!=-1 && i != newclient){
-            dup2(users[i].fd, STDOUT_FILENO);
-            loginMessage(users[newclient].IP.c_str(), users[newclient].port);
-        }
+        if (users[i].fd!=-1 && i != newclient)
+            loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[i].fd);
     }
 }
 void logout(int newclient){
@@ -354,11 +352,10 @@ int main(int argc, char *argv[]){
 
             int newclient = addUser(tmp, users);
 
-            dup2(connfd, STDOUT_FILENO);
             welcomeMessage();
 
-            loginMessage(users[newclient].IP.c_str(), users[newclient].port);
-            cout << "% ";
+            loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[newclient].fd);
+            send(users[newclient].fd, "% ", strlen("% "));
             login(newclient);
         }
 
