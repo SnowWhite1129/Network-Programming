@@ -370,7 +370,7 @@ int main(int argc, char *argv[]){
             {
                 dup2(sd, STDIN_FILENO);
                 dup2(sd, STDOUT_FILENO);
-                dup2(sd, STDERR_FILENO);
+                //dup2(sd, STDERR_FILENO);
                 chat(cli, i);
             }
         }
