@@ -213,7 +213,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     int fd[2], n=1;
     pid_t pid;
 
-    if (symbol != piped)
+    if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
 
     if (symbol == userpipe){
@@ -384,6 +384,7 @@ int main(int argc, char *argv[]){
 
             int newclient = addUser(tmp, users);
 
+            users[newclient].ID = newclient;
             welcomeMessage(users[newclient].fd);
 
             loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[newclient].fd);
