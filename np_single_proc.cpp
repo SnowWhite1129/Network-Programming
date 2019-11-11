@@ -384,7 +384,6 @@ int main(int argc, char *argv[]){
 
             int newclient = addUser(tmp, users);
 
-            users[newclient].ID = newclient;
             welcomeMessage(users[newclient].fd);
 
             loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[newclient].fd);
