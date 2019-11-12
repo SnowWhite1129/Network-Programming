@@ -10,6 +10,7 @@ void User::Init(string IP1, int ID1, int port1, int fd1) {
 }
 void User::Delete() {
     ID = -1;
+    fd = -1;
     --n;
 }
 User& User::operator=(const User &user) {
