@@ -183,6 +183,9 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         closePipe(clientID, pipe_table);
         close(users[clientID].fd);
         users[clientID].Delete();
+        dup2(STDIN_FILENO, STDIN_FILENO);
+        dup2(STDOUT_FILENO, STDOUT_FILENO);
+        dup2(STDERR_FILENO, STDERR_FILENO);
         return true;
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
@@ -498,9 +501,6 @@ int main(int argc, char *argv[]){
                 dup2(sd, STDOUT_FILENO);
                 dup2(sd, STDERR_FILENO);
                 chat(cli, i);
-                dup2(STDIN_FILENO, STDIN_FILENO);
-                dup2(STDOUT_FILENO, STDOUT_FILENO);
-                dup2(STDERR_FILENO, STDERR_FILENO);
             }
         }
         break;
