@@ -72,6 +72,7 @@ void name(int clientID, const string &name){
                 nameMessage(users[clientID].IP.c_str(), users[clientID].port, name.c_str(), users[i].fd);
             }
         }
+        users[clientID].name = name;
     }
 }
 
@@ -176,6 +177,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     if (parsed.at(0)=="exit"){
         logout(clientID);
         users[clientID].Delete();
+        closePipe(clientID, pipe_table);
         close(users[clientID].fd);
         return true;
     } else if (parsed.at(0)== "setenv"){
@@ -390,7 +392,7 @@ int main(int argc, char *argv[]){
     fd_set readfds;
     int max_sd, sd;
 
-    if(!Init(users)){
+    if(!Init()){
         printf("Init error\n");
         exit(0);
     }
