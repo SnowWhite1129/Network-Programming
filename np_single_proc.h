@@ -10,7 +10,7 @@ using namespace std;
 
 int takeInput();
 void printenv(const string &name);
-bool Init(User users[]);
+bool Init();
 void argsFree(char **args);
 bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line);
 bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line);

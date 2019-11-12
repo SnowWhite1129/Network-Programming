@@ -31,9 +31,8 @@ void login(int newclient){
 }
 void logout(int newclient){
     for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd!=-1){
-            dup2(users[i].fd, STDOUT_FILENO);
-            logoutMessage(users[newclient].name.c_str(), users[newclient].fd);
+        if (users[i].fd != -1){
+            logoutMessage(users[newclient].name.c_str(), users[i].fd);
         }
     }
 }
@@ -54,7 +53,7 @@ void send(int senderID, int receiverID, const string &message){
 void yell(int clientID, const string& message){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].ID != -1){
-            yellMessage(users[i].name.c_str(), message.c_str(), users[i].fd);
+            yellMessage(users[clientID].name.c_str(), message.c_str(), users[i].fd);
         }
     }
 }
@@ -69,7 +68,9 @@ void name(int clientID, const string &name){
         duplicatNameMessage(name.c_str(), users[clientID].fd);
     } else{
         for (int i = 0; i < max_clients; ++i) {
-            nameMessage(users[clientID].IP.c_str(), users[clientID].port, name.c_str(), users[i].fd);
+            if (users[i].ID != -1){
+                nameMessage(users[clientID].IP.c_str(), users[clientID].port, name.c_str(), users[i].fd);
+            }
         }
     }
 }
@@ -156,7 +157,7 @@ int takeInput(int clientID){
     return true;
 }
 
-bool Init(User users[]){
+bool Init(){
     for (int i = 0; i < max_clients; ++i) {
         users[i].ID = -1;
         users[i].fd = -1;
@@ -187,12 +188,16 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         return true;
     } else if (parsed.at(0) == "yell"){
         yell(clientID, parsed.at(1));
+        return true;
     } else if (parsed.at(0) == "who"){
         who(clientID);
+        return true;
     } else if (parsed.at(0) == "name"){
         name(clientID, parsed.at(1));
+        return true;
     } else if (parsed.at(0) == "tell"){
         tell(clientID, stoi(parsed.at(1)), parsed.at(2));
+        return true;
     }
 
     if (ID.readfd != -1){
