@@ -334,9 +334,9 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 void chat(const struct sockaddr_in &client, int clientID)
 {
     clearenv();
-    users[clientID].cmd.Set();
+    users[clientID].Set();
     takeInput(clientID);
-    write(users[clientID].cmd.fd, "% ", strlen("% ")) ;
+    write(users[clientID].fd, "% ", strlen("% ")) ;
 }
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);

@@ -1,8 +1,6 @@
 #ifndef NETWORK_PROGRAMMING_COMMAND_H
 #define NETWORK_PROGRAMMING_COMMAND_H
 
-#endif //NETWORK_PROGRAMMING_COMMAND_H
-
 #define MAXLIST 1000
 #define READ_END 0
 #define WRITE_END 1
@@ -15,3 +13,6 @@ struct command{
 };
 void Pop(command cmd[]);
 int check(const command cmd[], int n);
+
+#endif //NETWORK_PROGRAMMING_COMMAND_H
+
