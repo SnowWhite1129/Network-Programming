@@ -11,7 +11,7 @@ void User::Init(string IP1, int ID1, int port1, int fd1) {
 void User::Delete() {
     ID = -1;
     fd = -1;
-    environment.erase(environment.begin(), environment.end());
+    environment.clear();
     --n;
 }
 User& User::operator=(const User &user) {

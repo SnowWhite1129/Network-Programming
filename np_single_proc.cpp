@@ -256,7 +256,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 
     if (symbol == userpipe){
         if (users[ID.writefd].ID == -1){
-            nouserMessage(users[ID.writefd].ID, users[clientID].fd);
+            nouserMessage(ID.writefd, users[clientID].fd);
             return false;
         } else{
             if (checkPipeExist(clientID, ID.writefd, pipe_table)){
@@ -460,7 +460,6 @@ int main(int argc, char *argv[]){
                 dup2(saved_stdin, STDIN_FILENO);
                 dup2(saved_stdout, STDOUT_FILENO);
                 dup2(saved_stderr, STDERR_FILENO);
-
             }
         }
     }

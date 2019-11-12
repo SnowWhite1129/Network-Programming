@@ -40,7 +40,7 @@ void sendMessage(const char sendername[], int senderID, const char message[], co
 }
 void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** %s(#%d) just received from %s (#%d) by '%s' ***\n",
+    sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
             receivername, receiverID+1, sendername, senderID+1, message);
     write(fd, buffer, strlen(buffer));
 }
