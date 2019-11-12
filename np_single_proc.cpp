@@ -180,9 +180,9 @@ bool Init(){
 bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line){
     if (parsed.at(0)=="exit"){
         logout(clientID);
-        users[clientID].Delete();
         closePipe(clientID, pipe_table);
         close(users[clientID].fd);
+        users[clientID].Delete();
         return true;
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
@@ -492,13 +492,17 @@ int main(int argc, char *argv[]){
         {
             sd = users[i].fd;
 
-            if (FD_ISSET(sd , &readfds))
+            if (FD_ISSET(sd , &readfds)>0)
             {
                 dup2(sd, STDIN_FILENO);
                 dup2(sd, STDOUT_FILENO);
                 dup2(sd, STDERR_FILENO);
                 chat(cli, i);
+                dup2(STDIN_FILENO, STDIN_FILENO);
+                dup2(STDOUT_FILENO, STDOUT_FILENO);
+                dup2(STDERR_FILENO, STDERR_FILENO);
             }
         }
+        break;
     }
 }

@@ -22,7 +22,7 @@ User& User::operator=(const User &user) {
 }
 int addUser(const User &client, User users[]){
     for (int i = 0; i < max_clients; ++i) {
-        if (users[i].ID == -1){
+        if (users[i].ID == -1 && users[i].fd == -1){
             users[i] = client;
             users[i].ID = i;
             ++User::n;
