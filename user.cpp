@@ -7,6 +7,7 @@ void User::Init(string IP1, int ID1, int port1, int fd1) {
     IP = move(IP1);
     name = "(no name)";
     fd = fd1;
+    environment["PATH"] = "bin:.";
 }
 void User::Delete() {
     ID = -1;
@@ -20,6 +21,7 @@ User& User::operator=(const User &user) {
     IP = user.IP;
     name = user.name;
     fd = user.fd;
+    environment["PATH"] = "bin:.";
 }
 int addUser(const User &client, User users[]){
     for (int i = 0; i < max_clients; ++i) {
@@ -44,7 +46,7 @@ bool duplicateUser(const string &name, const User users[]){
 }
 void User::Set() {
     map<string, string>::iterator it;
-    for (it = environment.begin(); it !=  environment.end(); ++it) {
+    for (it = environment.begin(); it != environment.end(); ++it) {
         setenv(it->first.c_str(), it->second.c_str(), true);
     }
 }

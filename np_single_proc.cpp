@@ -115,7 +115,6 @@ bool Init(){
         for (int j = 0; j < MAXLIST; ++j) {
             users[i].cmd[j].Clean();
         }
-        users[i].environment["PATH"] = "bin:.";
     }
     return setenv("PATH", "bin:.", true)!=-1;
 }
