@@ -18,67 +18,8 @@
 
 using namespace std;
 
-command cmd[MAXLIST];
-
 User users[max_clients];
 Pipe pipe_table[max_clients][max_clients];
-
-void login(int newclient){
-    for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd!=-1 && i != newclient)
-            loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[i].fd);
-    }
-}
-void logout(int newclient){
-    for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd != -1){
-            logoutMessage(users[newclient].name.c_str(), users[i].fd);
-        }
-    }
-}
-void recieve(int receiverID, int senderID, const string &message){
-    for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd!=-1){
-            receiveMessage(users[receiverID].name.c_str(), receiverID, message.c_str(), users[senderID].name.c_str(), senderID, users[i].fd);
-        }
-    }
-}
-void send(int senderID, int receiverID, const string &message){
-    for (int i = 0; i < max_clients; ++i) {
-        if (users[i].fd!=-1){
-            sendMessage(users[senderID].name.c_str(), senderID, message.c_str(), users[receiverID].name.c_str(), receiverID, users[i].fd);
-        }
-    }
-}
-void yell(int clientID, const string& message){
-    for (int i = 0; i < max_clients; ++i) {
-        if (users[i].ID != -1){
-            yellMessage(users[clientID].name.c_str(), message.c_str(), users[i].fd);
-        }
-    }
-}
-void tell(int sender, int receiver, const string& message){
-    if (users[sender].ID == -1){
-        nouserMessage(sender, users[sender].fd);
-    } else{
-        toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
-    }
-}
-void who(int clientID){
-    whoMessage(clientID, users, users[clientID].fd);
-}
-void name(int clientID, const string &name){
-    if (duplicateUser(name, users)){
-        duplicatNameMessage(name.c_str(), users[clientID].fd);
-    } else{
-        for (int i = 0; i < max_clients; ++i) {
-            if (users[i].ID != -1){
-                nameMessage(users[clientID].IP.c_str(), users[clientID].port, name.c_str(), users[i].fd);
-            }
-        }
-        users[clientID].name = name;
-    }
-}
 
 int takeInput(int clientID){
     string line;
@@ -148,21 +89,22 @@ int takeInput(int clientID){
             continue;
         }
         execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
-        Pop(cmd);
+        Pop(users[clientID].cmd);
         args.clear();
     }
 
     if (symbol == normal || symbol == redirectout){
         execArgs(args, symbol, clientID, stdpipe, ID, line);
-        Pop(cmd);
+        Pop(users[clientID].cmd);
     } else if (symbol == userpipe){
         execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
-        Pop(cmd);
+        Pop(users[clientID].cmd);
     }
     return true;
 }
 
 bool Init(){
+    clearenv();
     for (int i = 0; i < max_clients; ++i) {
         users[i].ID = -1;
         users[i].fd = -1;
@@ -170,42 +112,43 @@ bool Init(){
             pipe_table[i][j].readfd = -1;
             pipe_table[i][j].writefd = -1;
         }
+        for (int j = 0; j < MAXLIST; ++j) {
+            users[i].cmd[j].Clean();
+        }
+        users[i].environment["PATH"] = "bin:.";
     }
-    for (auto & i : cmd)
-        i.Clean();
     return setenv("PATH", "bin:.", true)!=-1;
 }
 
 // Function where the system command is executed
 bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe, Pipe ID, string line){
     if (parsed.at(0)=="exit"){
-        logout(clientID);
+        logout(clientID, users);
         closePipe(clientID, pipe_table);
         close(users[clientID].fd);
         users[clientID].Delete();
-        dup2(STDIN_FILENO, STDIN_FILENO);
-        dup2(STDOUT_FILENO, STDOUT_FILENO);
-        dup2(STDERR_FILENO, STDERR_FILENO);
         return true;
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
-            exit(0);
+            printf("Erro setenv");
+            return false;
         }
+        users[clientID].environment[parsed.at(1)] = parsed.at(2);
         return true;
     } else if(parsed.at(0) == "printenv"){
         printenv(parsed.at(1));
         return true;
     } else if (parsed.at(0) == "yell"){
-        yell(clientID, parsed.at(1));
+        yell(clientID, parsed.at(1), users);
         return true;
     } else if (parsed.at(0) == "who"){
-        who(clientID);
+        who(clientID, users);
         return true;
     } else if (parsed.at(0) == "name"){
-        name(clientID, parsed.at(1));
+        name(clientID, parsed.at(1), users);
         return true;
     } else if (parsed.at(0) == "tell"){
-        tell(clientID, stoi(parsed.at(1))-1, parsed.at(2));
+        tell(clientID, stoi(parsed.at(1))-1, parsed.at(2), users);
         return true;
     }
 
@@ -218,7 +161,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
                 nomessageMessage(ID.readfd, clientID, users[clientID].fd);
                 return false;
             } else{
-                recieve(clientID, ID.readfd, line);
+                recieve(clientID, ID.readfd, line, users);
             }
         }
     }
@@ -229,10 +172,10 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         usleep(1000);
     }
     if (pid == 0) {
-        if (cmd[0].fd[READ_END]!=-1){
-            close(cmd[0].fd[WRITE_END]);
-            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
-            close(cmd[0].fd[READ_END]);
+        if (users[clientID].cmd[0].fd[READ_END]!=-1){
+            close(users[clientID].cmd[0].fd[WRITE_END]);
+            dup2(users[clientID].cmd[0].fd[READ_END], STDIN_FILENO);
+            close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1) {
             close(stdpipe.writefd);
@@ -269,9 +212,9 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         argsFree(args);
         exit(0);
     } else {
-        if (cmd[0].fd[READ_END]!=-1){
-            close(cmd[0].fd[WRITE_END]);
-            close(cmd[0].fd[READ_END]);
+        if (users[clientID].cmd[0].fd[READ_END]!=-1){
+            close(users[clientID].cmd[0].fd[WRITE_END]);
+            close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1){
             close(stdpipe.readfd);
@@ -292,17 +235,17 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
 
-    int prevfd = check(cmd, n);
+    int prevfd = check(users[clientID].cmd, n);
 
     if (prevfd == -1) {
         if (pipe(fd) < 0) {
             cout << "Pipe could not be initialized" << endl;
             return false;
         }
-        cmd[n].Init(fd);
+        users[clientID].cmd[n].Init(fd);
     } else {
         for (int i = 0; i < 2; ++i)
-            fd[i] = cmd[n].fd[i];
+            fd[i] = users[clientID].cmd[n].fd[i];
     }
 
     if (symbol == userpipe){
@@ -316,7 +259,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             } else{
                 pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
                 pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
-                send(clientID, ID.writefd, line);
+                send(clientID, ID.writefd, line, users);
             }
         }
         if (ID.readfd != -1){
@@ -328,7 +271,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
                     nomessageMessage(ID.readfd, clientID, users[clientID].fd);
                     return false;
                 } else{
-                    recieve(clientID, ID.readfd, line);
+                    recieve(clientID, ID.readfd, line, users);
                 }
             }
         }
@@ -344,10 +287,10 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         if(symbol == numberexplamation)
             dup2(fd[WRITE_END], STDERR_FILENO);
         close(fd[WRITE_END]);
-        if (cmd[0].fd[READ_END]!=-1){
-            close(cmd[0].fd[WRITE_END]);
-            dup2(cmd[0].fd[READ_END], STDIN_FILENO);
-            close(cmd[0].fd[READ_END]);
+        if (users[clientID].cmd[0].fd[READ_END]!=-1){
+            close(users[clientID].cmd[0].fd[WRITE_END]);
+            dup2(users[clientID].cmd[0].fd[READ_END], STDIN_FILENO);
+            close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1) {
             close(stdpipe.writefd);
@@ -376,9 +319,9 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         argsFree(args);
         exit(0);
     } else {
-        if (cmd[0].fd[READ_END]!=-1){
-            close(cmd[0].fd[WRITE_END]);
-            close(cmd[0].fd[READ_END]);
+        if (users[clientID].cmd[0].fd[READ_END]!=-1){
+            close(users[clientID].cmd[0].fd[WRITE_END]);
+            close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1){
             close(stdpipe.readfd);
@@ -390,8 +333,10 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 
 void chat(const struct sockaddr_in &client, int clientID)
 {
+    clearenv();
+    users[clientID].cmd.Set();
     takeInput(clientID);
-    write(users[clientID].fd, "% ", strlen("% ")) ;
+    write(users[clientID].cmd.fd, "% ", strlen("% ")) ;
 }
 int main(int argc, char *argv[]){
     signal(SIGCHLD, childHandler);
@@ -487,7 +432,7 @@ int main(int argc, char *argv[]){
 
             loginMessage(users[newclient].IP.c_str(), users[newclient].port, users[newclient].fd);
             write(users[newclient].fd, "% ", strlen("% "));
-            login(newclient);
+            login(newclient, users);
         }
 
         //else its some IO operation on some other socket
@@ -497,12 +442,18 @@ int main(int argc, char *argv[]){
 
             if (FD_ISSET(sd , &readfds)>0)
             {
+                int saved_stdin = dup(0);
+                int saved_stdout = dup(1);
+                int saved_stderr = dup(2);
                 dup2(sd, STDIN_FILENO);
                 dup2(sd, STDOUT_FILENO);
                 dup2(sd, STDERR_FILENO);
                 chat(cli, i);
+                dup2(saved_stdin, STDIN_FILENO);
+                dup2(saved_stdout, STDOUT_FILENO);
+                dup2(saved_stderr, STDERR_FILENO);
+
             }
         }
-        break;
     }
 }
