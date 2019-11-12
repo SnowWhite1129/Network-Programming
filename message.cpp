@@ -8,7 +8,7 @@ using namespace std;
 void welcomeMessage(int fd){
     char buffer[1025];
     sprintf(buffer, "***************************************\n"
-            "** Welcome to the information server **\n"
+            "** Welcome to the information server. **\n"
             "***************************************\n");
     write(fd, buffer, strlen(buffer));
 }

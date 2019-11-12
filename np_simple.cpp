@@ -13,9 +13,7 @@
 #include <arpa/inet.h>
 #include "npshell.h"
 #include "command.h"
-#include "message.h"
 #include "np_simple.h"
-#include "user.h"
 #include <vector>
 
 using namespace std;
@@ -209,8 +207,6 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol)
 void chat(const struct sockaddr_in &client)
 {
     // infinite loop for chat
-    welcomeMessage();
-    loginMessage(inet_ntoa(client.sin_addr), ntohs(client.sin_port));
     while (true) {
         printf("%% ");
         if (!takeInput())
