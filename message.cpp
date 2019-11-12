@@ -114,29 +114,17 @@ void send(int senderID, int receiverID, const string &message, const User users[
         }
     }
 }
-void yell(int clientID, const vector<string> &parsed, const User users[]){
-    string message = "";
-    for (int i = 1; i < parsed.size(); ++i) {
-        message += parsed.at(i);
-        if (i != parsed.size()-1)
-            message += " ";
-    }
+void yell(int clientID, const string &message, const User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].ID != -1){
             yellMessage(users[clientID].name.c_str(), message.c_str(), users[i].fd);
         }
     }
 }
-void tell(int sender, int receiver, const vector<string> &parsed, const User users[]){
+void tell(int sender, int receiver, const string &message, const User users[]){
     if (users[sender].ID == -1){
         nouserMessage(sender, users[sender].fd);
     } else{
-        string message = "";
-        for (int i = 1; i < parsed.size(); ++i) {
-            message += parsed.at(i);
-            if (i != parsed.size()-1)
-                message += " ";
-        }
         toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
     }
 }

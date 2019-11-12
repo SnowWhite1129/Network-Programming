@@ -24,8 +24,8 @@ void login(int newclient, const User users[]);
 void logout(int newclient, const User users[]);
 void recieve(int receiverID, int senderID, const string &message, const User users[]);
 void send(int senderID, int receiverID, const string &message, const User users[]);
-void yell(int clientID, const vector<string> &parsed, const User users[]);
-void tell(int sender, int receiver, const vector<string> &parsed, const User users[]);
+void yell(int clientID, const string &message, const User users[]);
+void tell(int sender, int receiver, const string &message, const User users[]);
 void who(int clientID, const User users[]);
 void name(int clientID, const string &name, User users[]);
 

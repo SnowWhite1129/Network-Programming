@@ -7,12 +7,15 @@ void User::Init(string IP1, int ID1, int port1, int fd1) {
     IP = move(IP1);
     name = "(no name)";
     fd = fd1;
-    environment["PATH"] = "bin:.";
 }
 void User::Delete() {
     ID = -1;
     fd = -1;
+    name = "(no name)";
     environment.clear();
+    for (int i = 0; i < MAXLIST; ++i) {
+        cmd[i].Clean();
+    }
     --n;
 }
 User& User::operator=(const User &user) {
@@ -21,13 +24,14 @@ User& User::operator=(const User &user) {
     IP = user.IP;
     name = user.name;
     fd = user.fd;
-    environment["PATH"] = "bin:.";
+
 }
 int addUser(const User &client, User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].ID == -1 && users[i].fd == -1){
             users[i] = client;
             users[i].ID = i;
+            users[i].environment["PATH"] = "bin:.";
             ++User::n;
             return i;
         }

@@ -21,13 +21,28 @@ using namespace std;
 User users[max_clients];
 Pipe pipe_table[max_clients][max_clients];
 
+void printenv(const string &name, int fd){
+    string message = getenv(name.c_str());
+    message += "\n";
+    write(fd, message.c_str(), message.size());
+}
 int takeInput(int clientID){
-    string line;
+    string line = "";
     Symbol symbol = normal;
-    if (!getline(cin, line)){
-        puts("");
-        exit(0);
+
+    int valread;
+    char buffer[1025] = {0};
+    valread = read(users[clientID].fd , buffer, 1024);
+    while (valread == 1024){
+        buffer[valread] = '\0';
+        line += buffer;
+        for (int i = 0; i < 1025; ++i) {
+            buffer[i] = '\0';
+        }
+        valread = read(users[clientID].fd , buffer, 1024);
     }
+    buffer[valread] = '\0';
+    line += buffer;
 
     string tmp = "";
     for(int i = 0; i < line.length(); i++)
@@ -135,10 +150,10 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         users[clientID].environment[parsed.at(1)] = parsed.at(2);
         return true;
     } else if(parsed.at(0) == "printenv"){
-        printenv(parsed.at(1));
+        printenv(parsed.at(1), users[clientID].fd);
         return true;
     } else if (parsed.at(0) == "yell"){
-        yell(clientID, parsed, users);
+        yell(clientID, line, users);
         return true;
     } else if (parsed.at(0) == "who"){
         who(clientID, users);
@@ -149,11 +164,12 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     } else if (parsed.at(0) == "tell"){
         int sender = stoi(parsed.at(1))-1;
         if (users[sender].ID != -1)
-            tell(clientID, stoi(parsed.at(1))-1, parsed, users);
+            tell(clientID, stoi(parsed.at(1))-1, line, users);
         else
             nouserMessage(sender, users[clientID].fd);
         return true;
     }
+    int devNull = -1;
 
     if (ID.readfd != -1){
         if (users[ID.readfd].ID ==-1){
@@ -162,7 +178,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         } else{
             if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
                 nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-                return false;
+                devNull = open("/dev/null", O_WRONLY);
             } else{
                 recieve(clientID, ID.readfd, line, users);
             }
@@ -180,10 +196,16 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             dup2(users[clientID].cmd[0].fd[READ_END], STDIN_FILENO);
             close(users[clientID].cmd[0].fd[READ_END]);
         }
-        if (ID.readfd != -1) {
-            close(stdpipe.writefd);
-            dup2(stdpipe.readfd, STDIN_FILENO);
-            close(stdpipe.readfd);
+        else if (ID.readfd != -1) {
+            if (devNull == -1){
+                close(stdpipe.writefd);
+                dup2(stdpipe.readfd, STDIN_FILENO);
+                close(stdpipe.readfd);
+            } else{
+                //TODO: something wrong?
+                dup2(devNull, STDIN_FILENO);
+                close(devNull);
+            }
         }
 
         if (symbol == redirectout){
@@ -195,6 +217,10 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             close(STDOUT_FILENO);
             dup2(out, STDOUT_FILENO);
             close(out);
+        } else{
+            dup2(users[clientID].fd, STDOUT_FILENO);
+            dup2(users[clientID].fd, STDERR_FILENO);
+            close(users[clientID].fd);
         }
 
         for (int i = 3; i < 1024; ++i)
@@ -236,6 +262,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 {
     int fd[2], n=1;
     pid_t pid;
+    int devNull = -1;
 
     if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
@@ -243,9 +270,8 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     int prevfd = check(users[clientID].cmd, n);
 
     if (prevfd == -1) {
-        if (pipe(fd) < 0) {
-            cout << "Pipe could not be initialized" << endl;
-            return false;
+        while (pipe(fd) < 0) {
+            usleep(1000);
         }
         users[clientID].cmd[n].Init(fd);
     } else {
@@ -259,7 +285,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             return false;
         } else{
             if (checkPipeExist(clientID, ID.writefd, pipe_table)){
-                occuipiedMessage(clientID, ID.writefd, clientID);
+                occuipiedMessage(clientID, ID.writefd, users[clientID].fd);
                 return false;
             } else{
                 pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
@@ -274,7 +300,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             } else{
                 if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
                     nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-                    return false;
+                    devNull = open("/dev/null", O_WRONLY);
                 } else{
                     recieve(clientID, ID.readfd, line, users);
                 }
@@ -291,16 +317,24 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         dup2(fd[WRITE_END], STDOUT_FILENO);
         if(symbol == numberexplamation)
             dup2(fd[WRITE_END], STDERR_FILENO);
+        else
+            dup2(users[clientID].fd, STDERR_FILENO);
         close(fd[WRITE_END]);
         if (users[clientID].cmd[0].fd[READ_END]!=-1){
             close(users[clientID].cmd[0].fd[WRITE_END]);
             dup2(users[clientID].cmd[0].fd[READ_END], STDIN_FILENO);
             close(users[clientID].cmd[0].fd[READ_END]);
         }
-        if (ID.readfd != -1) {
-            close(stdpipe.writefd);
-            dup2(stdpipe.readfd, STDIN_FILENO);
-            close(stdpipe.readfd);
+        else if (ID.readfd != -1) {
+            if (devNull == -1){
+                close(stdpipe.writefd);
+                dup2(stdpipe.readfd, STDIN_FILENO);
+                close(stdpipe.readfd);
+            } else{
+                //TODO: something wrong?
+                dup2(devNull, STDIN_FILENO);
+                close(devNull);
+            }
         }
 
         for (int i = 3; i < 1024; ++i)
@@ -449,19 +483,7 @@ int main(int argc, char *argv[]){
 
             if (FD_ISSET(sd , &readfds)>0)
             {
-                int saved_stdin = dup(0);
-                int saved_stdout = dup(1);
-                int saved_stderr = dup(2);
-                dup2(sd, STDIN_FILENO);
-                dup2(sd, STDOUT_FILENO);
-                dup2(sd, STDERR_FILENO);
                 chat(cli, i);
-                dup2(saved_stdin, STDIN_FILENO);
-                dup2(saved_stdout, STDOUT_FILENO);
-                dup2(saved_stderr, STDERR_FILENO);
-                close(saved_stdin);
-                close(saved_stdout);
-                close(saved_stderr);
             }
         }
     }
