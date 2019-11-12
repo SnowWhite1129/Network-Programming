@@ -460,6 +460,9 @@ int main(int argc, char *argv[]){
                 dup2(saved_stdin, STDIN_FILENO);
                 dup2(saved_stdout, STDOUT_FILENO);
                 dup2(saved_stderr, STDERR_FILENO);
+                close(saved_stdin);
+                close(saved_stdout);
+                close(saved_stderr);
             }
         }
     }
