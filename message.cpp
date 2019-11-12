@@ -7,9 +7,9 @@
 using namespace std;
 void welcomeMessage(int fd){
     char buffer[1025];
-    sprintf(buffer, "***************************************\n"
+    sprintf(buffer, "****************************************\n"
             "** Welcome to the information server. **\n"
-            "***************************************\n");
+            "****************************************\n");
     write(fd, buffer, strlen(buffer));
 }
 void loginMessage(const char IP[], int port, int fd){
@@ -34,7 +34,7 @@ void toldMessage(const char name[], const char message[], int fd){
 }
 void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, int fd){
     char buffer[1025] = {0};
-    sprintf(buffer, "*** %s(#%d) just piped '%s' to %s (#%d) ***\n",
+    sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
             sendername, senderID+1, message, receivername, receiverID+1);
     write(fd, buffer, strlen(buffer));
 }
@@ -46,7 +46,7 @@ void receiveMessage(const char receivername[], int receiverID, const char messag
 }
 void nouserMessage(int ID, int fd){
     char buffer[1025];
-    sprintf(buffer, "*** Error: user #%d does not exist yet. ***\n", ID);
+    sprintf(buffer, "*** Error: user #%d does not exist yet. ***\n", ID+1);
     write(fd, buffer, strlen(buffer));
 }
 void nomessageMessage(int senderID, int receiverID, int fd){
@@ -77,14 +77,14 @@ void whoMessage(int clientID, const User users[], int fd){
         if (users[i].ID != -1)
             userMessage(users[i], fd);
         if (i == clientID)
-            write(fd, "<-me", strlen("<-me"));
+            write(fd, "    <-me", strlen("    <-me"));
         if (users[i].ID != -1)
             write(fd, "\n", strlen("\n"));
     }
 }
 void userMessage(const User &user, int fd){
     char buffer[1025];
-    sprintf(buffer, "%d    %s     %s:%d    ", user.ID+1, user.name.c_str(), user.IP.c_str(), user.port);
+    sprintf(buffer, "%d    %s     %s:%d", user.ID+1, user.name.c_str(), user.IP.c_str(), user.port);
     write(fd, buffer, strlen(buffer));
 }
 void login(int newclient, const User users[]){
@@ -114,17 +114,29 @@ void send(int senderID, int receiverID, const string &message, const User users[
         }
     }
 }
-void yell(int clientID, const string& message, const User users[]){
+void yell(int clientID, const vector<string> &parsed, const User users[]){
+    string message = "";
+    for (int i = 1; i < parsed.size(); ++i) {
+        message += parsed.at(i);
+        if (i != parsed.size()-1)
+            message += " ";
+    }
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].ID != -1){
             yellMessage(users[clientID].name.c_str(), message.c_str(), users[i].fd);
         }
     }
 }
-void tell(int sender, int receiver, const string& message, const User users[]){
+void tell(int sender, int receiver, const vector<string> &parsed, const User users[]){
     if (users[sender].ID == -1){
         nouserMessage(sender, users[sender].fd);
     } else{
+        string message = "";
+        for (int i = 1; i < parsed.size(); ++i) {
+            message += parsed.at(i);
+            if (i != parsed.size()-1)
+                message += " ";
+        }
         toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
     }
 }

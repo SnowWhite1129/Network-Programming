@@ -139,7 +139,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         printenv(parsed.at(1));
         return true;
     } else if (parsed.at(0) == "yell"){
-        yell(clientID, parsed.at(1), users);
+        yell(clientID, parsed, users);
         return true;
     } else if (parsed.at(0) == "who"){
         who(clientID, users);
@@ -148,7 +148,11 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         name(clientID, parsed.at(1), users);
         return true;
     } else if (parsed.at(0) == "tell"){
-        tell(clientID, stoi(parsed.at(1))-1, parsed.at(2), users);
+        int sender = stoi(parsed.at(1))-1;
+        if (users[sender].ID != -1)
+            tell(clientID, stoi(parsed.at(1))-1, parsed, users);
+        else
+            nouserMessage(sender, users[clientID].fd);
         return true;
     }
 
@@ -217,6 +221,8 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1){
+            pipe_table[ID.readfd][clientID].readfd = -1;
+            pipe_table[ID.readfd][clientID].writefd = -1;
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
@@ -250,7 +256,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 
     if (symbol == userpipe){
         if (users[ID.writefd].ID == -1){
-            nouserMessage(clientID, users[clientID].fd);
+            nouserMessage(users[ID.writefd].ID, users[clientID].fd);
             return false;
         } else{
             if (checkPipeExist(clientID, ID.writefd, pipe_table)){
@@ -324,6 +330,8 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             close(users[clientID].cmd[0].fd[READ_END]);
         }
         if (ID.readfd != -1){
+            pipe_table[ID.readfd][clientID].readfd = -1;
+            pipe_table[ID.readfd][clientID].writefd = -1;
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
