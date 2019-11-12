@@ -66,7 +66,7 @@ void nameMessage(const char IP[], int port, const char name[], int fd){
 }
 void duplicatNameMessage(const char name[], int fd){
     char buffer[1025];
-    sprintf(buffer, "*** User '%s' already exists. ***", name);
+    sprintf(buffer, "*** User '%s' already exists. ***\n", name);
     write(fd, buffer, strlen(buffer));
 }
 void whoMessage(int clientID, const User users[], int fd){

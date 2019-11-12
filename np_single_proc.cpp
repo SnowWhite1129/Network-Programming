@@ -58,7 +58,11 @@ void yell(int clientID, const string& message){
     }
 }
 void tell(int sender, int receiver, const string& message){
-    toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
+    if (users[sender].ID == -1){
+        nouserMessage(sender, users[sender].fd);
+    } else{
+        toldMessage(users[sender].name.c_str(), message.c_str(), users[receiver].fd);
+    }
 }
 void who(int clientID){
     whoMessage(clientID, users, users[clientID].fd);
@@ -198,7 +202,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         name(clientID, parsed.at(1));
         return true;
     } else if (parsed.at(0) == "tell"){
-        tell(clientID, stoi(parsed.at(1)), parsed.at(2));
+        tell(clientID, stoi(parsed.at(1))-1, parsed.at(2));
         return true;
     }
 
