@@ -119,7 +119,7 @@ void yell(int clientID, const string &message, const User users[]){
         if (users[i].ID != -1){
             string line;
             line = message.substr(message.find(' ')+1);
-            yellMessage(users[clientID].name.c_str(), message.c_str(), users[i].fd);
+            yellMessage(users[clientID].name.c_str(), line.c_str(), users[i].fd);
         }
     }
 }
