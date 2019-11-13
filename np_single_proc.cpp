@@ -48,7 +48,7 @@ int takeInput(int clientID){
     for(int i = 0; i < line.length(); i++)
     {
         fflush(stdout);
-        if(line[i] != '\r' && line[i] != '\n'){
+        if(line[i] != '\r'){
             tmp += line[i];
         }
     }
@@ -67,7 +67,7 @@ int takeInput(int clientID){
     ID.readfd = -1;
     ID.writefd = -1;
     int receiverID, senderID;
-
+    //TODO
     while (iss >> str){
         if (str[0] == '|'){
             if (str.length()>1){
@@ -244,8 +244,12 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             args[i] = strdup(parsed.at(i).c_str());
 
         args[length] = nullptr;
-        if (execvp(args[0], args) < 0)
-            fprintf(stderr, "Unknown command: [%s].\n", args[0] );
+        if (execvp(args[0], args) < 0){
+            char buffer[1024];
+            sprintf(buffer, "Unknown command: [%s].\n", args[0] );
+            write(users[clientID].fd, buffer, strlen(buffer));
+        }
+
         argsFree(args);
         exit(0);
     } else {
@@ -262,9 +266,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         if (devNull != -1)
             close(devNull);
         int status;
-        printf("11111111111111111111111111111111");
         waitpid(pid, &status, 0);
-        printf("22222222222222222222222222222222");
         return true;
     }
 }
@@ -378,8 +380,11 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
 
         args[length] = NULL;
 
-        if (execvp(args[0], args) < 0)
-            fprintf(stderr, "Unknown command: [%s].\n", args[0]);
+        if (execvp(args[0], args) < 0){
+            char buffer[1024];
+            sprintf(buffer, "Unknown command: [%s].\n", args[0] );
+            write(users[clientID].fd, buffer, strlen(buffer));
+        }
         argsFree(args);
         exit(0);
     } else {
