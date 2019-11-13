@@ -261,6 +261,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         if (devNull != -1)
             close(devNull);
         int status;
+        waitpid(pid, &status, 0);
         return true;
     }
 }
