@@ -32,16 +32,14 @@ void toldMessage(const char name[], const char message[], int fd){
     sprintf(buffer, "*** %s told you ***: %s\n", name, message);
     write(fd, buffer, strlen(buffer));
 }
-void sendMessage(const char sendername[], int senderID, char message[], const char receivername[], int receiverID, int fd){
+void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, int fd){
     char buffer[1025] = {0};
-    message[strlen(message)-1] = '\0';
     sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
             sendername, senderID+1, message, receivername, receiverID+1);
     write(fd, buffer, strlen(buffer));
 }
-void receiveMessage(const char receivername[], int receiverID, char message[], const char sendername[], int senderID, int fd){
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, int fd){
     char buffer[1025];
-    message[strlen(message)-1] = '\0';
     sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
             receivername, receiverID+1, sendername, senderID+1, message);
     write(fd, buffer, strlen(buffer));
@@ -105,6 +103,8 @@ void logout(int newclient, const User users[]){
 void recieve(int receiverID, int senderID, const string &message, const User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].fd!=-1){
+            string line = message;
+            line[line.size()-1] = '\0';
             receiveMessage(users[receiverID].name.c_str(), receiverID, message.c_str(), users[senderID].name.c_str(), senderID, users[i].fd);
         }
     }
@@ -112,6 +112,8 @@ void recieve(int receiverID, int senderID, const string &message, const User use
 void send(int senderID, int receiverID, const string &message, const User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].fd!=-1){
+            string line = message;
+            line[line.size()-1] = '\0';
             sendMessage(users[senderID].name.c_str(), senderID, message.c_str(), users[receiverID].name.c_str(), receiverID, users[i].fd);
         }
     }
