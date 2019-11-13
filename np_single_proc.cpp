@@ -90,7 +90,7 @@ int takeInput(int clientID){
             }
             continue;
         } else if (str[0] == '<'){
-            if (symbol != redirectout)
+            if (symbol != redirectout && symbol != userpipe)
                 symbol = normal;
             senderID = stoi(str.substr(1))-1;
             ID.readfd = senderID;
@@ -212,7 +212,6 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
-                close(devNull);
             }
         }
 
@@ -259,6 +258,8 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
+        if (devNull != -1)
+            close(devNull);
         int status;
         waitpid(pid, &status, 0);
         return true;
@@ -314,11 +315,6 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             fd[i] = users[clientID].cmd[n].fd[i];
     }
 
-    if (symbol == userpipe){
-        pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
-        pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
-        send(clientID, ID.writefd, line, users);
-    }
     if (ID.readfd != -1){
         if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
             nomessageMessage(ID.readfd, clientID, users[clientID].fd);
@@ -327,6 +323,12 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             recieve(clientID, ID.readfd, line, users);
         }
     }
+    if (symbol == userpipe){
+        pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
+        pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
+        send(clientID, ID.writefd, line, users);
+    }
+
 
     while((pid=fork())<0){
         usleep(1000);
@@ -353,7 +355,6 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
-                close(devNull);
             }
         }
 
@@ -388,6 +389,8 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             close(stdpipe.readfd);
             close(stdpipe.writefd);
         }
+        if (devNull != -1)
+            close(devNull);
         return true;
     }
 }
