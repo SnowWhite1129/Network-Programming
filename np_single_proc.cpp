@@ -174,11 +174,15 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
     if (ID.readfd != -1){
         if (users[ID.readfd].ID ==-1){
             nouserMessage(ID.readfd, users[clientID].fd);
+            if (users[clientID].cmd[0].fd[READ_END]!=-1){
+                close(users[clientID].cmd[0].fd[WRITE_END]);
+                close(users[clientID].cmd[0].fd[READ_END]);
+            }
             return false;
         } else{
             if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
                 nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-                devNull = open("/dev/null", O_WRONLY);
+                devNull = open("/dev/null", O_RDONLY);
             } else{
                 recieve(clientID, ID.readfd, line, users);
             }
@@ -264,6 +268,26 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     pid_t pid;
     int devNull = -1;
 
+    if (symbol == userpipe){
+        if (users[ID.writefd].ID == -1){
+            nouserMessage(ID.writefd, users[clientID].fd);
+            if (users[clientID].cmd[0].fd[READ_END]!=-1){
+                close(users[clientID].cmd[0].fd[WRITE_END]);
+                close(users[clientID].cmd[0].fd[READ_END]);
+            }
+            return false;
+        } else{
+            if (checkPipeExist(clientID, ID.writefd, pipe_table)){
+                occuipiedMessage(clientID, ID.writefd, users[clientID].fd);
+                if (users[clientID].cmd[0].fd[READ_END]!=-1){
+                    close(users[clientID].cmd[0].fd[WRITE_END]);
+                    close(users[clientID].cmd[0].fd[READ_END]);
+                }
+                return false;
+            }
+        }
+    }
+
     if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
 
@@ -280,30 +304,20 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     }
 
     if (symbol == userpipe){
-        if (users[ID.writefd].ID == -1){
-            nouserMessage(ID.writefd, users[clientID].fd);
+        pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
+        pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
+        send(clientID, ID.writefd, line, users);
+    }
+    if (ID.readfd != -1){
+        if (users[ID.readfd].ID ==-1){
+            nouserMessage(ID.readfd, users[clientID].fd);
             return false;
         } else{
-            if (checkPipeExist(clientID, ID.writefd, pipe_table)){
-                occuipiedMessage(clientID, ID.writefd, users[clientID].fd);
-                return false;
+            if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+                nomessageMessage(ID.readfd, clientID, users[clientID].fd);
+                devNull = open("/dev/null", O_WRONLY);
             } else{
-                pipe_table[clientID][ID.writefd].readfd = fd[READ_END];
-                pipe_table[clientID][ID.writefd].writefd = fd[WRITE_END];
-                send(clientID, ID.writefd, line, users);
-            }
-        }
-        if (ID.readfd != -1){
-            if (users[ID.readfd].ID ==-1){
-                nouserMessage(ID.readfd, users[clientID].fd);
-                return false;
-            } else{
-                if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
-                    nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-                    devNull = open("/dev/null", O_WRONLY);
-                } else{
-                    recieve(clientID, ID.readfd, line, users);
-                }
+                recieve(clientID, ID.readfd, line, users);
             }
         }
     }
