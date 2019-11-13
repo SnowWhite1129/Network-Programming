@@ -45,11 +45,15 @@ int takeInput(int clientID){
     line += buffer;
 
     string tmp = "";
+    string message = "";
     for(int i = 0; i < line.length(); i++)
     {
         fflush(stdout);
         if(line[i] != '\r'){
             tmp += line[i];
+        }
+        if(line[i] != '\r' && line[i] != '\n'){
+            message += line[i];
         }
     }
     line = tmp;
@@ -103,7 +107,7 @@ int takeInput(int clientID){
                 symbol = normal;
             continue;
         }
-        execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
+        execArgsPiped(args, symbol, clientID, stdpipe, ID, message);
         Pop(users[clientID].cmd);
         args.clear();
         stdpipe.readfd = STDIN_FILENO;
@@ -113,10 +117,10 @@ int takeInput(int clientID){
     }
 
     if (symbol == normal || symbol == redirectout){
-        execArgs(args, symbol, clientID, stdpipe, ID, line);
+        execArgs(args, symbol, clientID, stdpipe, ID, message);
         Pop(users[clientID].cmd);
     } else if (symbol == userpipe){
-        execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
+        execArgsPiped(args, symbol, clientID, stdpipe, ID, message);
         Pop(users[clientID].cmd);
     }
     return true;
@@ -247,7 +251,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         if (execvp(args[0], args) < 0){
             char buffer[1024];
             sprintf(buffer, "Unknown command: [%s].\n", args[0] );
-            write(users[clientID].fd, buffer, strlen(buffer));
+            write(STDERR_FILENO, buffer, strlen(buffer));
         }
 
         argsFree(args);
@@ -383,7 +387,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         if (execvp(args[0], args) < 0){
             char buffer[1024];
             sprintf(buffer, "Unknown command: [%s].\n", args[0] );
-            write(users[clientID].fd, buffer, strlen(buffer));
+            write(STDERR_FILENO, buffer, strlen(buffer));
         }
         argsFree(args);
         exit(0);
