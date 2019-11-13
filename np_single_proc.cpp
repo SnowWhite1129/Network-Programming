@@ -256,9 +256,10 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
 
         args[length] = nullptr;
         if (execvp(args[0], args) < 0){
-            char buffer[1024];
-            sprintf(buffer, "Unknown command: [%s].\n", args[0] );
-            write(STDERR_FILENO, buffer, strlen(buffer));
+            string errmessage = "Unknown command: [";
+            errmessage+= args[0];
+            errmessage+= "].\n";
+            write(STDERR_FILENO, errmessage.c_str(), errmessage.length());
         }
 
         argsFree(args);
@@ -392,9 +393,10 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         args[length] = NULL;
 
         if (execvp(args[0], args) < 0){
-            char buffer[1024];
-            sprintf(buffer, "Unknown command: [%s].\n", args[0] );
-            write(STDERR_FILENO, buffer, strlen(buffer));
+            string errmessage = "Unknown command: [";
+            errmessage+= args[0];
+            errmessage+= "].\n";
+            write(STDERR_FILENO, errmessage.c_str(), errmessage.length());
         }
         argsFree(args);
         exit(0);
