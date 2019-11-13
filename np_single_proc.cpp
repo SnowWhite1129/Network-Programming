@@ -48,7 +48,7 @@ int takeInput(int clientID){
     for(int i = 0; i < line.length(); i++)
     {
         fflush(stdout);
-        if(line[i] != '\r'){
+        if(line[i] != '\r' && line[i] != '\n'){
             tmp += line[i];
         }
     }
@@ -106,6 +106,10 @@ int takeInput(int clientID){
         execArgsPiped(args, symbol, clientID, stdpipe, ID, line);
         Pop(users[clientID].cmd);
         args.clear();
+        stdpipe.readfd = STDIN_FILENO;
+        stdpipe.writefd = STDOUT_FILENO;
+        ID.readfd = -1;
+        ID.writefd = -1;
     }
 
     if (symbol == normal || symbol == redirectout){

@@ -103,8 +103,6 @@ void logout(int newclient, const User users[]){
 void recieve(int receiverID, int senderID, const string &message, const User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].fd!=-1){
-            string line = message;
-            line[line.size()-1] = '\0';
             receiveMessage(users[receiverID].name.c_str(), receiverID, message.c_str(), users[senderID].name.c_str(), senderID, users[i].fd);
         }
     }
@@ -112,8 +110,6 @@ void recieve(int receiverID, int senderID, const string &message, const User use
 void send(int senderID, int receiverID, const string &message, const User users[]){
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].fd!=-1){
-            string line = message;
-            line[line.size()-1] = '\0';
             sendMessage(users[senderID].name.c_str(), senderID, message.c_str(), users[receiverID].name.c_str(), receiverID, users[i].fd);
         }
     }
