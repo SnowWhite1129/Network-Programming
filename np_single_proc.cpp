@@ -212,6 +212,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
+                close(devNull);
             }
         }
 
@@ -261,7 +262,9 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
         if (devNull != -1)
             close(devNull);
         int status;
+        printf("11111111111111111111111111111111");
         waitpid(pid, &status, 0);
+        printf("22222222222222222222222222222222");
         return true;
     }
 }
@@ -318,7 +321,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     if (ID.readfd != -1){
         if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
             nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-            devNull = open("/dev/null", O_WRONLY);
+            devNull = open("/dev/null", O_RDONLY);
         } else{
             recieve(clientID, ID.readfd, line, users);
         }
@@ -355,6 +358,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
+                close(devNull);
             }
         }
 
