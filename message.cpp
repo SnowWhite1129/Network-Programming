@@ -32,14 +32,16 @@ void toldMessage(const char name[], const char message[], int fd){
     sprintf(buffer, "*** %s told you ***: %s\n", name, message);
     write(fd, buffer, strlen(buffer));
 }
-void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, int fd){
+void sendMessage(const char sendername[], int senderID, char message[], const char receivername[], int receiverID, int fd){
     char buffer[1025] = {0};
+    message[strlen(message)-1] = '\0';
     sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
             sendername, senderID+1, message, receivername, receiverID+1);
     write(fd, buffer, strlen(buffer));
 }
-void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, int fd){
+void receiveMessage(const char receivername[], int receiverID, char message[], const char sendername[], int senderID, int fd){
     char buffer[1025];
+    message[strlen(message)-1] = '\0';
     sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
             receivername, receiverID+1, sendername, senderID+1, message);
     write(fd, buffer, strlen(buffer));

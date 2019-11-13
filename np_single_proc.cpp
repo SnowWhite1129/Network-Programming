@@ -287,6 +287,12 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             }
         }
     }
+    if (ID.readfd != -1) {
+        if (users[ID.readfd].ID == -1) {
+            nouserMessage(ID.readfd, users[clientID].fd);
+            return false;
+        }
+    }
 
     if (symbol != piped && symbol != userpipe)
         n = stoi(parsed.at(parsed.size()-1));
@@ -297,7 +303,8 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         while (pipe(fd) < 0) {
             usleep(1000);
         }
-        users[clientID].cmd[n].Init(fd);
+        if (symbol != userpipe)
+            users[clientID].cmd[n].Init(fd);
     } else {
         for (int i = 0; i < 2; ++i)
             fd[i] = users[clientID].cmd[n].fd[i];
@@ -309,16 +316,11 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         send(clientID, ID.writefd, line, users);
     }
     if (ID.readfd != -1){
-        if (users[ID.readfd].ID ==-1){
-            nouserMessage(ID.readfd, users[clientID].fd);
-            return false;
+        if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+            nomessageMessage(ID.readfd, clientID, users[clientID].fd);
+            devNull = open("/dev/null", O_WRONLY);
         } else{
-            if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
-                nomessageMessage(ID.readfd, clientID, users[clientID].fd);
-                devNull = open("/dev/null", O_WRONLY);
-            } else{
-                recieve(clientID, ID.readfd, line, users);
-            }
+            recieve(clientID, ID.readfd, line, users);
         }
     }
 
