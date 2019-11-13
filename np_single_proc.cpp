@@ -33,7 +33,14 @@ int takeInput(int clientID){
     int valread;
     char buffer[1025] = {0};
     valread = read(users[clientID].fd , buffer, 1024);
+    while (valread < 0){
+        valread = read(users[clientID].fd , buffer, 1024);
+    }
     while (valread == 1024){
+        while (valread < 0){
+            valread = read(users[clientID].fd , buffer, 1024);
+            continue;
+        }
         buffer[valread] = '\0';
         line += buffer;
         for (int i = 0; i < 1025; ++i) {
