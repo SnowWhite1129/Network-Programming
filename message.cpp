@@ -226,14 +226,14 @@ void nameMessage(int clientID, const char IP[], int port, const char name[], Sha
     sprintf(buffer, "*** User from %s:%d is named '%s'. ***\n", IP, port, name);
     for (int i = 0; i < max_clients; ++i) {
         strcpy(shm->message[clientID][i], buffer);
-        kill(shm->users[i].pid, USER_SIG2);
+        kill(shm->users[i].pid, SIGUSR2);
     }
 }
 void login(int newclient, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1){
             loginMessage(shm->users[newclient].IP.c_str(), shm->users[newclient].port, shm, newclient, i);
-            kill(shm->users[i].pid, USER_SIG2);
+            kill(shm->users[i].pid, SIGUSR2);
         }
     }
 }
@@ -241,7 +241,7 @@ void logout(int newclient, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].fd != -1){
             logoutMessage(shm->users[newclient].name.c_str(), shm, newclient, i);
-            kill(shm->users[i].pid, USER_SIG2);
+            kill(shm->users[i].pid, SIGUSR2);
         }
     }
 }
@@ -250,7 +250,7 @@ void recieve(int receiverID, int senderID, const string &message, ShareMemory *s
         if (shm->users[i].fd!=-1) {
             receiveMessage(shm->users[receiverID].name.c_str(), receiverID, message.c_str(),
                            shm->users[senderID].name.c_str(), senderID, shm);
-            kill(shm->users[i].pid, USER_SIG2);
+            kill(shm->users[i].pid, SIGUSR2);
         }
     }
 }
@@ -259,7 +259,7 @@ void send(int senderID, int receiverID, const string &message, ShareMemory *shm)
         if (shm->users[i].fd!=-1) {
             sendMessage(shm->users[senderID].name.c_str(), senderID, message.c_str(),
                         shm->users[receiverID].name.c_str(), receiverID, shm);
-            kill(shm->users[i].pid, USER_SIG2);
+            kill(shm->users[i].pid, SIGUSR2);
         }
     }
 }
@@ -267,7 +267,7 @@ void yell(int clientID, ShareMemory *shm, const char message[]){
     for (int i = 0; i < max_clients; ++i) {
         strcpy(shm->message[clientID][i], message);
         yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
-        kill(shm->users[i].pid, USER_SIG2);
+        kill(shm->users[i].pid, SIGUSR2);
     }
 }
 void tell(int sender, int receiver, const char message[], ShareMemory *shm){
@@ -279,7 +279,7 @@ void tell(int sender, int receiver, const char message[], ShareMemory *shm){
         line = line.substr(line.find(' ')+1);
         strcpy(shm->message[sender][receiver], line.c_str());
         toldMessage(shm->users[sender].name.c_str(), line.c_str(), shm, sender, receiver);
-        kill(shm->users[receiver].pid, USER_SIG2);
+        kill(shm->users[receiver].pid, SIGUSR2);
     }
 }
 void whoMessagemulti(int clientID, const User users[]){

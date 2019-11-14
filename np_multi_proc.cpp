@@ -313,7 +313,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         mkfifo(filepath, 0666);
         shm->pipe_status[clientID][receiver] = true;
         send(sender, receiver, line, shm);
-        kill(shm->users[sender].pid, USER_SIG1);
+        kill(shm->users[sender].pid, SIGUSR1);
         fifofd = open(filepath, O_WRONLY);
     }
 
