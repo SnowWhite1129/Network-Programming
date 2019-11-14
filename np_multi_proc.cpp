@@ -16,6 +16,9 @@
 #include "message.h"
 #include "nppipe.h"
 #include "sharememory.h"
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/mman.h>
 
 command cmd[MAXLIST];
 

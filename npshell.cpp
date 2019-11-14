@@ -22,8 +22,5 @@ void argsFree(char **args){
         free(args[i]);
 }
 void exitHandler(int signo){
-    if (signo == 2){
-        //TODO: clean share memory
-        exit(0);
-    }
+    exit(0);
 }

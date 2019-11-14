@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <signal.h>
 #include "message.h"
 #include <iostream>
 #include <cstring>
@@ -222,7 +224,7 @@ void duplicatNameMessage(const string& name){
 void nameMessage(int clientID, const char IP[], int port, const char name[], ShareMemory *shm){
     char buffer[1025];
     sprintf(buffer, "*** User from %s:%d is named '%s'. ***\n", IP, port, name);
-    for (int i = 0; i < ; ++i) {
+    for (int i = 0; i < max_clients; ++i) {
         strcpy(shm->message[clientID][i], buffer);
         kill(shm->users[i].pid, USER_SIG2);
     }
