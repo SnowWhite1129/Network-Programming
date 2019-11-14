@@ -1,6 +1,7 @@
 #include <wait.h>
 #include <iostream>
 #include "npshell.h"
+#include <unistd.h>
 
 void childHandler(int signo){
     int status;
@@ -11,7 +12,18 @@ void childHandler(int signo){
 void printenv(const string &name){
     cout << getenv(name.c_str()) << endl;
 }
+void printenv(const string &name, int fd){
+    string message = getenv(name.c_str());
+    message += "\n";
+    write(fd, message.c_str(), message.size());
+}
 void argsFree(char **args){
     for(int i=0;args[i]!= nullptr;++i)
         free(args[i]);
+}
+void exitHandler(int signo){
+    if (signo == 2){
+        //TODO: clean share memory
+        exit(0);
+    }
 }

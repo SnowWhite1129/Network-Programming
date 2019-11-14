@@ -21,11 +21,6 @@ using namespace std;
 User users[max_clients];
 Pipe pipe_table[max_clients][max_clients];
 
-void printenv(const string &name, int fd){
-    string message = getenv(name.c_str());
-    message += "\n";
-    write(fd, message.c_str(), message.size());
-}
 int takeInput(int clientID){
     string line = "";
     Symbol symbol = normal;
@@ -358,6 +353,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
         else
             dup2(users[clientID].fd, STDERR_FILENO);
         close(fd[WRITE_END]);
+
         if (users[clientID].cmd[0].fd[READ_END]!=-1){
             close(users[clientID].cmd[0].fd[WRITE_END]);
             dup2(users[clientID].cmd[0].fd[READ_END], STDIN_FILENO);

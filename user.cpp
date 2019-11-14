@@ -7,10 +7,19 @@ void User::Init(string IP1, int ID1, int port1, int fd1) {
     IP = move(IP1);
     name = "(no name)";
     fd = fd1;
+    pid = -1;
+}
+void User::Init(string IP1, int ID1, int port1, int fd1, pid_t pid1) {
+    ID = ID1;
+    port = port1;
+    IP = move(IP1);
+    name = "(no name)";
+    pid = pid1;
 }
 void User::Delete() {
     ID = -1;
     fd = -1;
+    pid = -1;
     name = "(no name)";
     environment.clear();
     for (int i = 0; i < MAXLIST; ++i) {
@@ -24,7 +33,7 @@ User& User::operator=(const User &user) {
     IP = user.IP;
     name = user.name;
     fd = user.fd;
-
+    pid = user.pid;
 }
 int addUser(const User &client, User users[]){
     for (int i = 0; i < max_clients; ++i) {

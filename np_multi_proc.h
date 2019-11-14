@@ -9,10 +9,9 @@
 
 using namespace std;
 
-int takeInput();
-void printenv(const string &name);
-bool Init(User users[]);
-void argsFree(char **args);
-void execArgs(vector <string> &parsed, Symbol symbol);
-void execArgsPiped(vector <string> &parsed, Symbol symbol);
-void chat(const struct sockaddr_in &client);
+void messageHandler(int signo);
+void fifoHandler(int signo);
+int takeInput(int clientID);
+void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, int receiver, const string &line);
+void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sender, int receiver, const string &line);
+void chat(int clientID);
