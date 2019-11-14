@@ -19,6 +19,8 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 command cmd[MAXLIST];
 
@@ -32,7 +34,7 @@ void messageHandler(int signo){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[i][j]) > 0 ){
                     //TODO: init : clear message
-                    tell(i, j, shm->message[i][j], shm->users);
+                    tellmulti(i, j, shm->message[i][j], shm->users);
                 }
             }
         }
@@ -155,7 +157,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         printenv(parsed.at(1));
         return;
     } else if (parsed.at(0) == "yell"){
-        yell(clientID, shm, line);
+        yellmulti(clientID, shm, line);
         return;
     } else if (parsed.at(0) == "who"){
         whomulti(clientID, shm->users);
@@ -166,7 +168,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
     } else if (parsed.at(0) == "tell"){
         int sender = stoi(parsed.at(1))-1;
         if (shm->users[sender].ID != -1)
-            tell(clientID, stoi(parsed.at(1))-1, line, shm);
+            tellmulti(clientID, stoi(parsed.at(1))-1, line, shm);
         else
             nouserMessage(sender);
         return;
@@ -403,7 +405,7 @@ int main(int argc, char *argv[]){
     signal(SIGUSR1, fifoHandler);
     signal(SIGUSR2, messageHandler);
 
-    if(!Init(shm)){
+    if(!Init()){
         printf("Init error\n");
         exit(0);
     }

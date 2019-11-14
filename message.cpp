@@ -125,7 +125,7 @@ void yell(int clientID, const string &message, const User users[]){
         }
     }
 }
-void tell(int sender, int receiver, const string &message, const User users[]){
+void tellmulti(int sender, int receiver, const string &message, const User users[]){
     if (users[sender].ID == -1){
         nouserMessage(sender, users[sender].fd);
     } else{
@@ -263,14 +263,14 @@ void send(int senderID, int receiverID, const string &message, ShareMemory *shm)
         }
     }
 }
-void yell(int clientID, ShareMemory *shm, const char message[]){
+void yellmulti(int clientID, ShareMemory *shm, const char message[]){
     for (int i = 0; i < max_clients; ++i) {
         strcpy(shm->message[clientID][i], message);
         yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
         kill(shm->users[i].pid, SIGUSR2);
     }
 }
-void tell(int sender, int receiver, const char message[], ShareMemory *shm){
+void tellmulti(int sender, int receiver, const char message[], ShareMemory *shm){
     if (shm->users[sender].ID == -1){
         nouserMessage(sender);
     } else{
