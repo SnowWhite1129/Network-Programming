@@ -211,6 +211,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
             if (devNull == -1){
                 dup2(shm->pipe_fd[sender][clientID], STDIN_FILENO);
                 close(shm->pipe_fd[sender][clientID]);
+                shm -> pipe_status[sender][clientID] = false;
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
@@ -252,8 +253,10 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
             close(cmd[0].fd[READ_END]);
         }
         if (sender != -1){
-            shm->pipe_status[sender][clientID] = false;
             close(shm->pipe_fd[sender][clientID]);
+            while(shm -> pipe_status[sender][clientID]){
+                usleep(1000);
+            }
             shm->pipe_fd[sender][clientID] = -1;
         }
         int status;
@@ -356,6 +359,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             if (devNull == -1){
                 dup2(shm->pipe_fd[sender][clientID], STDIN_FILENO);
                 close(shm->pipe_fd[sender][clientID]);
+                shm->pipe_status[sender][clientID] = false;
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
@@ -392,8 +396,10 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             close(fifofd);
         }
         if (sender != -1){
-            shm->pipe_status[sender][clientID] = false;
             close(shm->pipe_fd[sender][clientID]);
+            while(shm -> pipe_status[sender][clientID]){
+                usleep(1000);
+            }
             shm->pipe_fd[sender][clientID] = -1;
         }
         if (devNull != -1)
