@@ -125,7 +125,7 @@ void yell(int clientID, const string &message, const User users[]){
         }
     }
 }
-void tellmulti(int sender, int receiver, const string &message, const User users[]){
+void tell(int sender, int receiver, const string &message, const User users[]){
     if (users[sender].ID == -1){
         nouserMessage(sender, users[sender].fd);
     } else{
