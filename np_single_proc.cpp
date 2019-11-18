@@ -293,7 +293,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
             }
             return false;
         } else{
-            if (checkPipeExist(clientID, ID.writefd, pipe_table)){
+            if (checkPipeStatus(clientID, ID.writefd, pipe_table)){
                 occuipiedMessage(clientID, ID.writefd, users[clientID].fd);
                 if (users[clientID].cmd[0].fd[READ_END]!=-1){
                     close(users[clientID].cmd[0].fd[WRITE_END]);
