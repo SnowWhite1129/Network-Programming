@@ -30,6 +30,8 @@ ShareMemory *shm = (ShareMemory *)mmap(0, sizeof(ShareMemory), PROT_READ|PROT_WR
 
 void messageHandler(int signo){
     for (int i = 0; i < max_clients; ++i) {
+        cout << "NowPID: " << getpid() << endl;
+        cout << "MemoryPID: " << shm->users[i].pid << endl;
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
