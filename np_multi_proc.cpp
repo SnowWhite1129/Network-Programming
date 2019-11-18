@@ -337,6 +337,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
 
     if (pid==0){
         //TODO: dup to fifofd
+        if (symbol == userpipe)
+            dup2(fifofd, STDOUT_FILENO);
         if (fifofd != -1){
             dup2(fifofd, STDOUT_FILENO);
         } else{
