@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 #include "command.h"
 #include "np_multi_proc.h"
-#include "message.h"
+#include "multimessage.h"
 #include "nppipe.h"
 #include "sharememory.h"
 #include <sys/types.h>
