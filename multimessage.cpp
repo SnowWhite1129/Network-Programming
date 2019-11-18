@@ -9,7 +9,7 @@
 #include <cstring>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "user.h"
+#include "multiuser.h"
 
 void welcomeMessage(){
     cout << "****************************************\n"

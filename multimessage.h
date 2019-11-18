@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-#include "user.h"
+#include "multiuser.h"
 #include "sharememory.h"
 
 void welcomeMessage();

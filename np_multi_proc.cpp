@@ -139,7 +139,7 @@ int takeInput(int clientID){
 
 bool Init(){
     clearenv();
-    shm -> userstatus = false;
+    shm->userstatus = false;
     for (int i = 0; i < max_clients; ++i) {
         shm->users[i].Delete();
         for (int j = 0; j < max_clients; ++j) {
