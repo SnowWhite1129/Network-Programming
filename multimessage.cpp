@@ -1,7 +1,6 @@
 //
 // Created by Taka on 2019/11/18.
 //
-
 #include "multimessage.h"
 #include <sys/types.h>
 #include <signal.h>
@@ -11,7 +10,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "user.h"
-
 
 void welcomeMessage(){
     cout << "****************************************\n"
@@ -41,20 +39,28 @@ void duplicatNameMessage(const string& name){
     cout <<  "*** User '" << name << "' already exists. ***\n";
 }
 void login(int newclient, ShareMemory *shm){
+    while(__sync_bool_compare_and_swap(&(shm -> userstatus), false, true)){
+        usleep(1000);
+    }
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1){
             loginMessage(shm->users[newclient].IP.c_str(), shm->users[newclient].port, shm, newclient, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
+    shm -> userstatus = false;
 }
 void logout(int newclient, ShareMemory *shm){
+    while(__sync_bool_compare_and_swap(&(shm -> userstatus), false, true)){
+        usleep(1000);
+    }
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID != -1){
             logoutMessage(shm->users[newclient].name.c_str(), shm, newclient, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
+    shm -> userstatus = false;
 }
 void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm, int i){
     char buffer[1025];
@@ -92,6 +98,9 @@ void yellMessage(const char name[], const char message[], ShareMemory *shm, int 
     strcpy(shm->message[senderID][clientID], buffer);
 }
 void yell(int clientID, ShareMemory *shm, const char message[]){
+    while(__sync_bool_compare_and_swap(&(shm -> userstatus), false, true)){
+        usleep(1000);
+    }
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID != -1){
             strcpy(shm->message[clientID][i], message);
@@ -99,6 +108,7 @@ void yell(int clientID, ShareMemory *shm, const char message[]){
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
+    shm -> userstatus = false;
 }
 void toldMessage(const char name[], const char message[], ShareMemory *shm, int senderID, int clientID){
     char buffer[1025];

@@ -5,6 +5,7 @@
 
 struct ShareMemory{
     User users[max_clients];
+    bool userstatus;
     bool pipe_status[max_clients][max_clients];
     char message[max_clients][max_clients][1025];
     int pipe_fd[max_clients][max_clients];

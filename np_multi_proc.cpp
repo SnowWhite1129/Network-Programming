@@ -34,8 +34,10 @@ void messageHandler(int signo){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
-                    cout << shm->message[j][i];
-                    fflush(stdout);
+                    if (shm->users[j].ID != -1){
+                        cout << shm->message[j][i];
+                        fflush(stdout);
+                    }
                     strcpy(shm->message[j][i], "");
                 }
             }
@@ -137,6 +139,7 @@ int takeInput(int clientID){
 
 bool Init(){
     clearenv();
+    shm -> userstatus = false;
     for (int i = 0; i < max_clients; ++i) {
         shm->users[i].Delete();
         for (int j = 0; j < max_clients; ++j) {
