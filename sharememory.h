@@ -1,7 +1,7 @@
 #ifndef NETWORK_PROGRAMMING_SHAREMEMORY_H
 #define NETWORK_PROGRAMMING_SHAREMEMORY_H
 
-#include "user.h"
+#include "multiuser.h"
 
 struct ShareMemory{
     User users[max_clients];

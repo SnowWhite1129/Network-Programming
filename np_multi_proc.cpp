@@ -492,7 +492,7 @@ int main(int argc, char *argv[]){
             }
 
             User tmp;
-            tmp.Init(inet_ntoa(cli.sin_addr), 0, ntohs(cli.sin_port), -1, getpid());
+            tmp.Init(inet_ntoa(cli.sin_addr), 0, ntohs(cli.sin_port) , getpid());
             int clientID = addUser(tmp, shm->users);
 
             dup2(connfd, STDIN_FILENO);
