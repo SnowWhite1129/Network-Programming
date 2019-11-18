@@ -19,7 +19,7 @@ void loginMessage(const char IP[], int port, ShareMemory *shm, int senderID, int
 void login(int newclient, ShareMemory *shm);
 void logoutMessage(const char name[], ShareMemory *shm, int senderID, int clientID);
 void logout(int newclient, ShareMemory *shm);
-void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm);
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm, int i);
 void recieve(int receiverID, int senderID, const string &message, ShareMemory *shm);
 void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, ShareMemory *shm, int i);
 void send(int senderID, int receiverID, const string &message, ShareMemory *shm);

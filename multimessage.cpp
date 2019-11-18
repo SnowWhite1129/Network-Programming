@@ -28,17 +28,6 @@ void logoutMessage(const char name[], ShareMemory *shm, int senderID, int client
     sprintf(buffer, "*** User '%s' left. ***\n", name);
     strcpy(shm->message[senderID][clientID], buffer);
 }
-void yellMessage(const char name[], const char message[], ShareMemory *shm, int senderID, int clientID){
-    char buffer[1025];
-    sprintf(buffer, "*** %s yelled ***: %s\n", name, message);
-    strcpy(shm->message[senderID][clientID], buffer);
-}
-void toldMessage(const char name[], const char message[], ShareMemory *shm, int senderID, int clientID){
-    char buffer[1025];
-    sprintf(buffer, "*** %s told you ***: %s\n", name, message);
-    strcpy(shm->message[senderID][clientID], buffer);
-}
-
 void nouserMessage(int ID){
     cout << "*** Error: user #" << ID+1 << " does not exist yet. ***" << endl;
 }
@@ -50,14 +39,6 @@ void occuipiedMessage(int senderID, int receiverID){
 }
 void duplicatNameMessage(const string& name){
     cout <<  "*** User '" << name << "' already exists. ***\n";
-}
-void nameMessage(int clientID, const char IP[], int port, const char name[], ShareMemory *shm){
-    char buffer[1025];
-    sprintf(buffer, "*** User from %s:%d is named '%s'. ***\n", IP, port, name);
-    for (int i = 0; i < max_clients; ++i) {
-        strcpy(shm->message[clientID][i], buffer);
-        kill(shm->users[i].pid, SIGUSR2);
-    }
 }
 void login(int newclient, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
@@ -75,17 +56,17 @@ void logout(int newclient, ShareMemory *shm){
         }
     }
 }
-void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm){
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm, int i){
     char buffer[1025];
     sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
             receivername, receiverID+1, sendername, senderID+1, message);
-    strcpy(shm->message[senderID][receiverID], buffer);
+    strcpy(shm->message[senderID][i], buffer);
 }
 void recieve(int receiverID, int senderID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1) {
             receiveMessage(shm->users[receiverID].name.c_str(), receiverID, message.c_str(),
-                           shm->users[senderID].name.c_str(), senderID, shm);
+                           shm->users[senderID].name.c_str(), senderID, shm, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -105,12 +86,24 @@ void send(int senderID, int receiverID, const string &message, ShareMemory *shm)
         }
     }
 }
+void yellMessage(const char name[], const char message[], ShareMemory *shm, int senderID, int clientID){
+    char buffer[1025];
+    sprintf(buffer, "*** %s yelled ***: %s\n", name, message);
+    strcpy(shm->message[senderID][clientID], buffer);
+}
 void yell(int clientID, ShareMemory *shm, const char message[]){
     for (int i = 0; i < max_clients; ++i) {
-        strcpy(shm->message[clientID][i], message);
-        yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
-        kill(shm->users[i].pid, SIGUSR2);
+        if (shm->users[i].ID != -1){
+            strcpy(shm->message[clientID][i], message);
+            yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
+            kill(shm->users[i].pid, SIGUSR2);
+        }
     }
+}
+void toldMessage(const char name[], const char message[], ShareMemory *shm, int senderID, int clientID){
+    char buffer[1025];
+    sprintf(buffer, "*** %s told you ***: %s\n", name, message);
+    strcpy(shm->message[senderID][clientID], buffer);
 }
 void tell(int sender, int receiver, const char message[], ShareMemory *shm){
     if (shm->users[sender].ID == -1){
@@ -140,6 +133,16 @@ void whoMessage(int clientID, const User users[]){
 }
 void who(int clientID, const User users[]){
     whoMessage(clientID, users);
+}
+void nameMessage(int clientID, const char IP[], int port, const char name[], ShareMemory *shm){
+    char buffer[1025];
+    sprintf(buffer, "*** User from %s:%d is named '%s'. ***\n", IP, port, name);
+    for (int i = 0; i < max_clients; ++i) {
+        if (shm->users[i].ID != -1){
+            strcpy(shm->message[clientID][i], buffer);
+            kill(shm->users[i].pid, SIGUSR2);
+        }
+    }
 }
 void name(int clientID, const string &name, ShareMemory *shm){
     if (duplicateUser(name, shm->users)){

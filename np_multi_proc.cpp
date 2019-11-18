@@ -453,7 +453,7 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    if(setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
+    if (setsockopt(sockfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (struct sockaddr *)&servaddr , sizeof(servaddr)) < 0){
         printf("setsockopt failed\n");
         close(sockfd);
         exit(2);
