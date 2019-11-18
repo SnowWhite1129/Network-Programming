@@ -5,7 +5,7 @@ bool checkPipeStatus(int sender, int clientID, const Pipe pipe_table[][max_clien
     return pipe_table[sender][clientID].readfd == -1 || pipe_table[sender][clientID].writefd == -1;
 }
 bool checkPipeStatusMulti(int sender, int clientID, const bool pipe_status[][max_clients]){
-    return !pipe_status[sender][clientID];
+    return pipe_status[sender][clientID];
 }
 void closePipe(int clientID, Pipe pipe_table[][max_clients]){
     for (int i = 0; i < max_clients; ++i) {

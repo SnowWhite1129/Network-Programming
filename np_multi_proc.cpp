@@ -188,7 +188,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
     int devNull = -1;
 
     if (sender != -1) {
-        if (checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
+        if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
             nomessageMessage(sender, clientID);
             devNull = open("/dev/null", O_RDONLY);
         } else{
@@ -312,7 +312,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
     }
 
     if (sender != -1) {
-        if (checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
+        if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
             nomessageMessage(sender, clientID);
             devNull = open("/dev/null", O_RDONLY);
         } else{
