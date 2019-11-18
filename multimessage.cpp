@@ -90,17 +90,17 @@ void recieve(int receiverID, int senderID, const string &message, ShareMemory *s
         }
     }
 }
-void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, ShareMemory *shm){
+void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, ShareMemory *shm, int i){
     char buffer[1025] = {0};
     sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
             sendername, senderID+1, message, receivername, receiverID+1);
-    strcpy(shm->message[senderID][receiverID], buffer);
+    strcpy(shm->message[senderID][i], buffer);
 }
 void send(int senderID, int receiverID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1) {
             sendMessage(shm->users[senderID].name.c_str(), senderID, message.c_str(),
-                        shm->users[receiverID].name.c_str(), receiverID, shm);
+                        shm->users[receiverID].name.c_str(), receiverID, shm, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
