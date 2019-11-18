@@ -37,7 +37,7 @@ void messageHandler(int signo){
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
                     cout << shm->message[j][i];
-                    memset(shm->message[j][i], '\0', sizeof(shm->message[j][i]));
+                    strcpy(shm->message[j][i], "");
                 }
             }
         }
@@ -142,7 +142,7 @@ bool Init(){
         for (int j = 0; j < max_clients; ++j) {
             shm->pipe_status[i][j] = false;
             shm->pipe_fd[i][j] = -1;
-            memset(shm->message[i][j], '\0', sizeof(shm->message[i][j]));
+            strcpy(shm->message[j][i], "");
         }
     }
     for (int i = 0; i < MAXLIST; ++i) {
@@ -156,8 +156,8 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
     if (parsed.at(0)=="exit"){
         shm->users[clientID].Delete();
         for (int i = 0; i < max_clients; ++i) {
-            memset(shm->message[i][clientID], '\0', sizeof(shm->message[i][clientID]));
-            memset(shm->message[clientID][i], '\0', sizeof(shm->message[clientID][i]));
+            strcpy(shm->message[i][clientID], "");
+            strcpy(shm->message[clientID][i], "");
         }
         logout(clientID, shm);
         exit(0);
