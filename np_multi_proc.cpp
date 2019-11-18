@@ -35,6 +35,7 @@ void messageHandler(int signo){
                 if (strlen(shm->message[i][j]) > 0 ){
                     //TODO: init : clear message
                     tellmulti(i, j, shm->message[i][j], shm);
+                    memset(shm->message[i][j], '\0', sizeof(shm->message[i][j]));
                 }
             }
         }
@@ -139,6 +140,7 @@ bool Init(){
         for (int j = 0; j < max_clients; ++j) {
             shm->pipe_status[i][j] = false;
             shm->pipe_fd[i][j] = -1;
+            memset(shm->message[i][j], '\0', sizeof(shm->message[i][j]));
         }
     }
     for (int i = 0; i < MAXLIST; ++i) {
