@@ -148,3 +148,7 @@ void name(int clientID, const string &name, ShareMemory *shm){
         nameMessage(clientID, shm->users[clientID].IP.c_str(), shm->users[clientID].port, name.c_str(), shm);
     }
 }
+void outputMessage(int sender, int receiver, const char message[], ShareMemory *shm){
+    strcpy(shm->message[sender][receiver], message);
+    kill(shm->users[receiver].pid, SIGUSR2);
+}

@@ -36,7 +36,7 @@ void messageHandler(int signo){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
-                    tell(i, j, shm->message[j][i], shm);
+                    outputMessage(i, j, shm->message[j][i], shm);
                     memset(shm->message[j][i], '\0', sizeof(shm->message[i][j]));
                 }
             }

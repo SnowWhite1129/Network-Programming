@@ -32,5 +32,6 @@ void tell(int sender, int receiver, const char message[], ShareMemory *shm);
 void whoMessage(int clientID, const User users[]);
 void who(int clientID, const User users[]);
 void name(int clientID, const string &name, ShareMemory *shm);
+void outputMessage(int sender, int receiver, const char message[], ShareMemory *shm);
 
 #endif //NETWORK_PROGRAMMING_MULTIMESSAGE_H
