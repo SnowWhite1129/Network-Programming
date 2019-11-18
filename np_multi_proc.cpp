@@ -38,6 +38,7 @@ void messageHandler(int signo){
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
                     cout << "++++++++++++++++++++++" << endl;
+                    fflush(shm->message[j][i]);
                     cout << shm->message[j][i];
                     strcpy(shm->message[j][i], "");
                 }
@@ -329,7 +330,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         sprintf(filepath, "user_pipe/%d_%d", clientID, receiver);
         mkfifo(filepath, 0666);
         shm->pipe_status[clientID][receiver] = true;
-        send(sender, receiver, line, shm);
+        send(clientID, receiver, line, shm);
         kill(shm->users[sender].pid, SIGUSR1);
         fifofd = open(filepath, O_WRONLY);
     }

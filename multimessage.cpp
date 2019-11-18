@@ -38,26 +38,15 @@ void toldMessage(const char name[], const char message[], ShareMemory *shm, int 
     sprintf(buffer, "*** %s told you ***: %s\n", name, message);
     strcpy(shm->message[senderID][clientID], buffer);
 }
-void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, ShareMemory *shm){
-    char buffer[1025] = {0};
-    sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
-            sendername, senderID+1, message, receivername, receiverID+1);
-    strcpy(shm->message[senderID][receiverID], buffer);
-}
-void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm){
-    char buffer[1025];
-    sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
-            receivername, receiverID+1, sendername, senderID+1, message);
-    strcpy(shm->message[senderID][receiverID], buffer);
-}
+
 void nouserMessage(int ID){
-    cout << "*** Error: user #" << ID << " does not exist yet. ***" << endl;
+    cout << "*** Error: user #" << ID+1 << " does not exist yet. ***" << endl;
 }
 void nomessageMessage(int senderID, int receiverID){
-    cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " does not exist yet. ***" << endl;
+    cout << "*** Error: the pipe #" << senderID+1 << "->#" << receiverID+1 << " does not exist yet. ***" << endl;
 }
 void occuipiedMessage(int senderID, int receiverID){
-    cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " already exists. ***" << endl;
+    cout << "*** Error: the pipe #" << senderID+1 << "->#" << receiverID+1 << " already exists. ***" << endl;
 }
 void duplicatNameMessage(const string& name){
     cout <<  "*** User '" << name << "' already exists. ***\n";
@@ -86,18 +75,30 @@ void logout(int newclient, ShareMemory *shm){
         }
     }
 }
+void receiveMessage(const char receivername[], int receiverID, const char message[], const char sendername[], int senderID, ShareMemory *shm){
+    char buffer[1025];
+    sprintf(buffer, "*** %s (#%d) just received from %s (#%d) by '%s' ***\n",
+            receivername, receiverID+1, sendername, senderID+1, message);
+    strcpy(shm->message[senderID][receiverID], buffer);
+}
 void recieve(int receiverID, int senderID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
-        if (shm->users[i].fd!=-1) {
+        if (shm->users[i].ID!=-1) {
             receiveMessage(shm->users[receiverID].name.c_str(), receiverID, message.c_str(),
                            shm->users[senderID].name.c_str(), senderID, shm);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
 }
+void sendMessage(const char sendername[], int senderID, const char message[], const char receivername[], int receiverID, ShareMemory *shm){
+    char buffer[1025] = {0};
+    sprintf(buffer, "*** %s (#%d) just piped '%s' to %s (#%d) ***\n",
+            sendername, senderID+1, message, receivername, receiverID+1);
+    strcpy(shm->message[senderID][receiverID], buffer);
+}
 void send(int senderID, int receiverID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
-        if (shm->users[i].fd!=-1) {
+        if (shm->users[i].ID!=-1) {
             sendMessage(shm->users[senderID].name.c_str(), senderID, message.c_str(),
                         shm->users[receiverID].name.c_str(), receiverID, shm);
             kill(shm->users[i].pid, SIGUSR2);
