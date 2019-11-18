@@ -29,13 +29,15 @@ using namespace std;
 ShareMemory *shm = (ShareMemory *)mmap(0, sizeof(ShareMemory), PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED, -1, 0);
 
 void messageHandler(int signo){
+    //cout << "NowPID: " << getpid() << endl;
     for (int i = 0; i < max_clients; ++i) {
-        //cout << "NowPID: " << getpid() << endl;
         //cout << "MemoryPID: " << shm->users[i].pid << endl;
         if (shm->users[i].pid == getpid()){
+            cout << "------------------------" << endl;
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
+                    cout << "++++++++++++++++++++++" << endl;
                     cout << shm->message[j][i];
                     strcpy(shm->message[j][i], "");
                 }
@@ -154,12 +156,12 @@ bool Init(){
 // Function where the system command is executed
 void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, const string &line){
     if (parsed.at(0)=="exit"){
+        logout(clientID, shm);
         shm->users[clientID].Delete();
         for (int i = 0; i < max_clients; ++i) {
             strcpy(shm->message[i][clientID], "");
             strcpy(shm->message[clientID][i], "");
         }
-        logout(clientID, shm);
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){

@@ -80,7 +80,7 @@ void login(int newclient, ShareMemory *shm){
 }
 void logout(int newclient, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
-        if (shm->users[i].fd != -1){
+        if (shm->users[i].ID != -1){
             logoutMessage(shm->users[newclient].name.c_str(), shm, newclient, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
