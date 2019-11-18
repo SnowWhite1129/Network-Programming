@@ -26,7 +26,7 @@ command cmd[MAXLIST];
 
 using namespace std;
 
-ShareMemory *shm = (ShareMemory *)mmap(0, sizeof(shm), PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED, -1, 0);
+ShareMemory *shm = (ShareMemory *)mmap(0, sizeof(ShareMemory), PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED, -1, 0);
 
 void messageHandler(int signo){
     for (int i = 0; i < max_clients; ++i) {
@@ -135,7 +135,11 @@ int takeInput(int clientID){
 bool Init(){
     clearenv();
     for (int i = 0; i < max_clients; ++i) {
-        shm->users[i].ID = -1;
+        shm->users->Delete();
+        for (int j = 0; j < max_clients; ++j) {
+            shm->pipe_status[i][j] = false;
+            shm->pipe_fd[i][j] = -1;
+        }
     }
     for (int i = 0; i < MAXLIST; ++i) {
        cmd[i].Clean();
