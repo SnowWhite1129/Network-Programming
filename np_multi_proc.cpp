@@ -32,10 +32,10 @@ void messageHandler(int signo){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
-                if (strlen(shm->message[i][j]) > 0 ){
+                if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
-                    tell(i, j, shm->message[i][j], shm);
-                    memset(shm->message[i][j], '\0', sizeof(shm->message[i][j]));
+                    tell(i, j, shm->message[j][i], shm);
+                    memset(shm->message[j][i], '\0', sizeof(shm->message[i][j]));
                 }
             }
         }
@@ -136,7 +136,7 @@ int takeInput(int clientID){
 bool Init(){
     clearenv();
     for (int i = 0; i < max_clients; ++i) {
-        shm->users[i]->Delete();
+        shm->users[i].Delete();
         for (int j = 0; j < max_clients; ++j) {
             shm->pipe_status[i][j] = false;
             shm->pipe_fd[i][j] = -1;
