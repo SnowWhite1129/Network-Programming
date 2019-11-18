@@ -59,9 +59,6 @@ void nomessageMessage(int senderID, int receiverID){
 void occuipiedMessage(int senderID, int receiverID){
     cout << "*** Error: the pipe #" << senderID << "->#" << receiverID << " already exists. ***" << endl;
 }
-void userMessage(const User &user){
-    cout << user.ID+1 << "    " << user.name.c_str() << "    " << user.IP.c_str() << "    " << user.port;
-}
 void duplicatNameMessage(const string& name){
     cout <<  "*** User '" << name << "' already exists. ***\n";
 }
@@ -107,14 +104,14 @@ void send(int senderID, int receiverID, const string &message, ShareMemory *shm)
         }
     }
 }
-void yellmulti(int clientID, ShareMemory *shm, const char message[]){
+void yell(int clientID, ShareMemory *shm, const char message[]){
     for (int i = 0; i < max_clients; ++i) {
         strcpy(shm->message[clientID][i], message);
         yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
         kill(shm->users[i].pid, SIGUSR2);
     }
 }
-void tellmulti(int sender, int receiver, const char message[], ShareMemory *shm){
+void tell(int sender, int receiver, const char message[], ShareMemory *shm){
     if (shm->users[sender].ID == -1){
         nouserMessage(sender);
     } else{
@@ -126,7 +123,10 @@ void tellmulti(int sender, int receiver, const char message[], ShareMemory *shm)
         kill(shm->users[receiver].pid, SIGUSR2);
     }
 }
-void whoMessagemulti(int clientID, const User users[]){
+void userMessage(const User &user){
+    cout << user.ID+1 << "    " << user.name.c_str() << "    " << user.IP.c_str() << "    " << user.port;
+}
+void whoMessage(int clientID, const User users[]){
     cout << "<ID>    <nickname>    <IP:port>    <indicate me>\n";
     for (int i = 0; i < max_clients; ++i) {
         if (users[i].ID != -1)
@@ -137,8 +137,8 @@ void whoMessagemulti(int clientID, const User users[]){
             cout << "\n";
     }
 }
-void whomulti(int clientID, const User users[]){
-    whoMessagemulti(clientID, users);
+void who(int clientID, const User users[]){
+    whoMessage(clientID, users);
 }
 void name(int clientID, const string &name, ShareMemory *shm){
     if (duplicateUser(name, shm->users)){

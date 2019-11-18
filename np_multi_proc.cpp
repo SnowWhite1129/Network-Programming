@@ -34,7 +34,7 @@ void messageHandler(int signo){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[i][j]) > 0 ){
                     //TODO: init : clear message
-                    tellmulti(i, j, shm->message[i][j], shm);
+                    tell(i, j, shm->message[i][j], shm);
                     memset(shm->message[i][j], '\0', sizeof(shm->message[i][j]));
                 }
             }
@@ -136,7 +136,7 @@ int takeInput(int clientID){
 bool Init(){
     clearenv();
     for (int i = 0; i < max_clients; ++i) {
-        shm->users->Delete();
+        shm->users[i]->Delete();
         for (int j = 0; j < max_clients; ++j) {
             shm->pipe_status[i][j] = false;
             shm->pipe_fd[i][j] = -1;
@@ -163,10 +163,10 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         printenv(parsed.at(1));
         return;
     } else if (parsed.at(0) == "yell"){
-        yellmulti(clientID, shm, line.c_str());
+        yell(clientID, shm, line.c_str());
         return;
     } else if (parsed.at(0) == "who"){
-        whomulti(clientID, shm->users);
+        who(clientID, shm->users);
         return;
     } else if (parsed.at(0) == "name"){
         name(clientID, parsed.at(1), shm);
@@ -174,7 +174,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
     } else if (parsed.at(0) == "tell"){
         int ID = stoi(parsed.at(1))-1;
         if (shm->users[ID].ID != -1)
-            tellmulti(clientID, stoi(parsed.at(1))-1, line.c_str(), shm);
+            tell(clientID, stoi(parsed.at(1))-1, line.c_str(), shm);
         else
             nouserMessage(sender);
         return;
