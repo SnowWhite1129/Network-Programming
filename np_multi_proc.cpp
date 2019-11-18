@@ -14,7 +14,7 @@
 #include "command.h"
 #include "np_multi_proc.h"
 #include "multimessage.h"
-#include "nppipe.h"
+#include "multinppipe.h"
 #include "sharememory.h"
 #include <sys/types.h>
 #include <signal.h>
