@@ -34,7 +34,7 @@ void messageHandler(int signo){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[i][j]) > 0 ){
                     //TODO: init : clear message
-                    tellmulti(i, j, shm->message[i][j], shm->users);
+                    tellmulti(i, j, shm->message[i][j], shm);
                 }
             }
         }
@@ -123,7 +123,7 @@ int takeInput(int clientID){
     }
 
     if (symbol == normal || symbol == redirectout){
-        execArgs(args, symbol, clientID, senderID, receiverID, line);
+        execArgs(args, symbol, clientID, senderID, line);
         Pop(cmd);
     } else if (symbol == userpipe){
         execArgsPiped(args, symbol, clientID, senderID, receiverID, line);
@@ -144,7 +144,7 @@ bool Init(){
 }
 
 // Function where the system command is executed
-void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, int receiver, const string &line){
+void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, const string &line){
     if (parsed.at(0)=="exit"){
         logout(clientID, shm);
         exit(0);
@@ -157,7 +157,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         printenv(parsed.at(1));
         return;
     } else if (parsed.at(0) == "yell"){
-        yellmulti(clientID, shm, line);
+        yellmulti(clientID, shm, line.c_str());
         return;
     } else if (parsed.at(0) == "who"){
         whomulti(clientID, shm->users);
@@ -166,9 +166,9 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         name(clientID, parsed.at(1), shm);
         return;
     } else if (parsed.at(0) == "tell"){
-        int sender = stoi(parsed.at(1))-1;
-        if (shm->users[sender].ID != -1)
-            tellmulti(clientID, stoi(parsed.at(1))-1, line, shm);
+        int ID = stoi(parsed.at(1))-1;
+        if (shm->users[ID].ID != -1)
+            tellmulti(clientID, stoi(parsed.at(1))-1, line.c_str(), shm);
         else
             nouserMessage(sender);
         return;
