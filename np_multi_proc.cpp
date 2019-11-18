@@ -29,17 +29,13 @@ using namespace std;
 ShareMemory *shm = (ShareMemory *)mmap(0, sizeof(ShareMemory), PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_SHARED, -1, 0);
 
 void messageHandler(int signo){
-    //cout << "NowPID: " << getpid() << endl;
     for (int i = 0; i < max_clients; ++i) {
-        //cout << "MemoryPID: " << shm->users[i].pid << endl;
         if (shm->users[i].pid == getpid()){
-            cout << "------------------------" << endl;
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
-                    cout << "++++++++++++++++++++++" << endl;
-                    fflush(shm->message[j][i]);
                     cout << shm->message[j][i];
+                    fflush(stdout);
                     strcpy(shm->message[j][i], "");
                 }
             }
