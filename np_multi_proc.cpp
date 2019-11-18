@@ -46,13 +46,14 @@ void fifoHandler(int signo){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
-                if (shm->pipe_status[j][i] && shm->pipe_fd[j][i] != -1){
+                if (shm->pipe_status[j][i]){
                     //TODO: init pipe_fd
                     char filepath[1024];
                     sprintf(filepath, "user_pipe/%d_%d", j, i);
                     mkfifo(filepath, 0666);
                     int fifofd = open(filepath, O_RDONLY);
                     shm->pipe_fd[j][i] = fifofd;
+                    unlink(filepath);
                 }
             }
         }
@@ -336,11 +337,9 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
     }
 
     if (pid==0){
-        //TODO: dup to fifofd
-        if (symbol == userpipe)
-            dup2(fifofd, STDOUT_FILENO);
         if (fifofd != -1){
             dup2(fifofd, STDOUT_FILENO);
+            close(fifofd);
         } else{
             close(fd[READ_END]);
             dup2(fd[WRITE_END], STDOUT_FILENO);
@@ -490,6 +489,7 @@ int main(int argc, char *argv[]){
             dup2(connfd, STDIN_FILENO);
             dup2(connfd, STDOUT_FILENO);
             dup2(connfd, STDERR_FILENO);
+            close(connfd);
 
             chat(clientID);
             exit(0);
