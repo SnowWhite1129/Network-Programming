@@ -37,7 +37,7 @@ void messageHandler(int signo){
                 if (strlen(shm->message[j][i]) > 0 ){
                     //TODO: init : clear message
                     cout << shm->message[j][i];
-                    memset(shm->message[j][i], '\0', sizeof(shm->message[i][j]));
+                    memset(shm->message[j][i], '\0', sizeof(shm->message[j][i]));
                 }
             }
         }
