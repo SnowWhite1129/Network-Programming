@@ -7,9 +7,6 @@ bool checkPipeExist(int sender, int clientID, Pipe pipe_table[][max_clients]){
 bool checkPipeStatus(int sender, int clientID, Pipe pipe_table[][max_clients]){
     return pipe_table[sender][clientID].readfd == -1 || pipe_table[sender][clientID].writefd == -1;
 }
-bool checkPipeExistMulti(int sender, int clientID, int pipe_fd[][max_clients]){
-    return pipe_fd[sender][clientID] != -1;
-}
 bool checkPipeStatusMulti(int sender, int clientID, bool pipe_status[][max_clients]){
     return pipe_status[sender][clientID];
 }

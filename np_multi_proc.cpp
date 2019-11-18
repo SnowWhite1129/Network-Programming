@@ -263,8 +263,8 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             }
             return;
         } else{
-            if (checkPipeExistMulti(clientID, receiver, shm->pipe_status)){
-                //TODO checkPipeExistMulti
+            if (checkPipeStatusMulti(clientID, receiver, shm->pipe_status)){
+                //TODO checkPipeStatusMulti
                 occuipiedMessage(clientID, receiver);
                 if (cmd[0].fd[READ_END]!=-1){
                     close(cmd[0].fd[WRITE_END]);
