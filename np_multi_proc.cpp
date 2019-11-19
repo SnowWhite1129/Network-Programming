@@ -277,7 +277,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
 // Function where the piped system commands is executed
 void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sender, int receiver, const string &line)
 {
-    int fd[2], n=1, fifofd=-1, devNull=-1;
+    int fd[2], npriority=1, fifofd=-1, devNull=-1;
     pid_t pid;
 
     if (symbol == userpipe){
@@ -303,19 +303,19 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
 
     if (symbol != userpipe){
         if (symbol != piped)
-            n = stoi(parsed.at(parsed.size()-1));
+            npriority = stoi(parsed.at(parsed.size()-1));
 
-        int prevfd = check(cmd, n);
+        int prevfd = check(cmd, npriority);
 
         if (prevfd == -1) {
             if (pipe(fd) < 0) {
                 cout << "Pipe could not be initialized" << endl;
                 return;
             }
-            cmd[n].Init(fd);
+            cmd[npriority].Init(fd);
         } else {
             for (int i = 0; i < 2; ++i)
-                fd[i] = cmd[n].fd[i];
+                fd[i] = cmd[npriority].fd[i];
         }
     }
 
