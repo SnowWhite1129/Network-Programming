@@ -115,8 +115,8 @@ void toldMessage(const char name[], const char message[], ShareMemory *shm, int 
     strcpy(shm->message[senderID][clientID], buffer);
 }
 void tell(int sender, int receiver, const char message[], ShareMemory *shm){
-    if (shm->users[sender].ID == -1){
-        nouserMessage(sender);
+    if (shm->users[receiver].ID == -1){
+        nouserMessage(receiver);
     } else{
         string line = message;
         line = line.substr(line.find(' ')+1);

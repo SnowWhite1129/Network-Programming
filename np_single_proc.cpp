@@ -190,7 +190,7 @@ bool execArgs(vector <string> &parsed, Symbol symbol, int clientID, Pipe stdpipe
             }
             return false;
         } else{
-            if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+            if (!checkPipeStatus(ID.readfd, clientID, pipe_table)){
                 nomessageMessage(ID.readfd, clientID, users[clientID].fd);
                 devNull = open("/dev/null", O_RDONLY);
             } else{
@@ -327,7 +327,7 @@ bool execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, Pipe st
     }
 
     if (ID.readfd != -1){
-        if (checkPipeStatus(ID.readfd, clientID, pipe_table)){
+        if (!checkPipeStatus(ID.readfd, clientID, pipe_table)){
             nomessageMessage(ID.readfd, clientID, users[clientID].fd);
             devNull = open("/dev/null", O_RDONLY);
         } else{

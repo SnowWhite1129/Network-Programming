@@ -79,9 +79,9 @@ void whoMessage(int clientID, const User users[], int fd){
         if (users[i].ID != -1)
             userMessage(users[i], fd);
         if (i == clientID)
-            cout << "    <-me";
+            write(fd, "    <-me", strlen("    <-me"));
         if (users[i].ID != -1)
-            cout<< "\n";
+            write(fd, "\n", strlen("\n"));
     }
 }
 void userMessage(const User &user, int fd){
