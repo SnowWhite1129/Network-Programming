@@ -34,10 +34,8 @@ void messageHandler(int signo){
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
-                    if (shm->users[j].ID != -1){
-                        cout << shm->message[j][i];
-                        fflush(stdout);
-                    }
+                    cout << shm->message[j][i];
+                    fflush(stdout);
                     strcpy(shm->message[j][i], "");
                 }
             }
