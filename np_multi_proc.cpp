@@ -159,8 +159,10 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         shm->users[clientID].Delete();
         for (int i = 0; i < max_clients; ++i) {
             strcpy(shm->message[i][clientID], "");
+            shm->pipe_fd[i][clientID] = -1;
+            shm->pipe_status[i][clientID] = false;
         }
-        shm->n--;
+        --shm->n;
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
