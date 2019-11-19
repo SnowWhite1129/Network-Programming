@@ -22,7 +22,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-int n=0;
 command cmd[MAXLIST];
 
 using namespace std;
@@ -478,7 +477,7 @@ int main(int argc, char *argv[]){
     while(true){
         len = sizeof(cli);
 
-        if ( n > 30){
+        if ( shm->users::n > 30){
             continue;
         }
 

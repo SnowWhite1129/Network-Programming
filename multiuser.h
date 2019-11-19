@@ -15,7 +15,7 @@ using namespace std;
 struct User{
     char name[200], IP[50];
     int ID, port;
-
+    static int n;
     pid_t pid;
 
     void Init(const char IP1[], int ID1, int port1, pid_t pid1);

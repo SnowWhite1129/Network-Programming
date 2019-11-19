@@ -1,11 +1,11 @@
 //
 // Created by Taka on 2019/11/18.
 //
-
 #include "multiuser.h"
 #include <iostream>
 #include <cstring>
 
+int User::n = 0;
 void User::Init(const char IP1[], int ID1, int port1, pid_t pid1) {
     ID = ID1;
     port = port1;
@@ -17,6 +17,7 @@ void User::Delete() {
     ID = -1;
     pid = -1;
     strcpy(name, "(no name)");
+    --n;
 }
 User& User::operator=(const User &user) {
     ID = user.ID;
