@@ -50,7 +50,7 @@ void fifoHandler(int signo){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
-                if (shm->pipe_status[j][i]){
+                if (shm->pipe_status[j][i] && shm->pipe_fd[j][i]==-1){
                     //TODO: init pipe_fd
                     char filepath[1024];
                     sprintf(filepath, "user_pipe/%d_%d", j, i);
