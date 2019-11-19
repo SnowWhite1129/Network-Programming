@@ -183,10 +183,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         return;
     } else if (parsed.at(0) == "tell"){
         int ID = stoi(parsed.at(1))-1;
-        if (shm->users[ID].ID != -1)
-            tell(clientID, stoi(parsed.at(1))-1, line.c_str(), shm);
-        else
-            nouserMessage(sender);
+        tell(clientID, ID, line.c_str(), shm);
         return;
     }
     int devNull = -1;
