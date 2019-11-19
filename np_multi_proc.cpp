@@ -160,6 +160,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         for (int i = 0; i < max_clients; ++i) {
             strcpy(shm->message[i][clientID], "");
         }
+        shm->n--;
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
@@ -193,6 +194,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
                 close(cmd[0].fd[WRITE_END]);
                 close(cmd[0].fd[READ_END]);
             }
+            return;
         } else{
             if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
                 nomessageMessage(sender, clientID);
@@ -323,6 +325,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
                 close(cmd[0].fd[WRITE_END]);
                 close(cmd[0].fd[READ_END]);
             }
+            return;
         } else{
             if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
                 nomessageMessage(sender, clientID);
@@ -477,7 +480,7 @@ int main(int argc, char *argv[]){
     while(true){
         len = sizeof(cli);
 
-        if ( User::n > 30){
+        if ( shm->n == 30){
             continue;
         }
 
@@ -502,7 +505,7 @@ int main(int argc, char *argv[]){
             tmp.Init(inet_ntoa(cli.sin_addr), 0, ntohs(cli.sin_port) , getpid());
             int clientID = addUser(tmp, shm->users);
             ++shm->n;
-            
+
             dup2(connfd, STDIN_FILENO);
             dup2(connfd, STDOUT_FILENO);
             dup2(connfd, STDERR_FILENO);
