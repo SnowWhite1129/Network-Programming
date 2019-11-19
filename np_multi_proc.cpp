@@ -159,7 +159,6 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         for (int i = 0; i < max_clients; ++i) {
             strcpy(shm->message[i][clientID], "");
         }
-        --n;
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
@@ -477,7 +476,7 @@ int main(int argc, char *argv[]){
     while(true){
         len = sizeof(cli);
 
-        if ( shm->users::n > 30){
+        if ( User::n > 30){
             continue;
         }
 
