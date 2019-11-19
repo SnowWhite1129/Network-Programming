@@ -137,6 +137,7 @@ int takeInput(int clientID){
 bool Init(){
     clearenv();
     shm->userstatus = false;
+    shm->n = 0;
     for (int i = 0; i < max_clients; ++i) {
         shm->users[i].Delete();
         for (int j = 0; j < max_clients; ++j) {
@@ -500,11 +501,14 @@ int main(int argc, char *argv[]){
             User tmp;
             tmp.Init(inet_ntoa(cli.sin_addr), 0, ntohs(cli.sin_port) , getpid());
             int clientID = addUser(tmp, shm->users);
-
+            ++shm->n;
+            
             dup2(connfd, STDIN_FILENO);
             dup2(connfd, STDOUT_FILENO);
             dup2(connfd, STDERR_FILENO);
             close(connfd);
+
+
 
             chat(clientID);
             exit(0);
