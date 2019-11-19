@@ -215,6 +215,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
                 dup2(shm->pipe_fd[sender][clientID], STDIN_FILENO);
                 close(shm->pipe_fd[sender][clientID]);
                 shm->pipe_status[sender][clientID] = false;
+                shm->pipe_fd[sender][clientID] = -1;
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
@@ -363,6 +364,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
                 dup2(shm->pipe_fd[sender][clientID], STDIN_FILENO);
                 close(shm->pipe_fd[sender][clientID]);
                 shm->pipe_status[sender][clientID] = false;
+                shm->pipe_fd[sender][clientID] = -1;
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);

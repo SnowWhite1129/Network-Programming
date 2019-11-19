@@ -127,7 +127,7 @@ void tell(int sender, int receiver, const char message[], ShareMemory *shm){
     }
 }
 void userMessage(const User &user){
-    cout << user.ID+1 << "    " << user.name << ":" << user.IP << "    " << user.port;
+    cout << user.ID+1 << "    " << user.name << "    " << user.IP << ":" << user.port;
 }
 void whoMessage(int clientID, const User users[]){
     cout << "<ID>    <nickname>    <IP:port>    <indicate me>\n";
