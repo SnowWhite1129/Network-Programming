@@ -1,4 +1,3 @@
-
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -197,12 +196,13 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
                 close(cmd[0].fd[WRITE_END]);
                 close(cmd[0].fd[READ_END]);
             }
-        }
-        if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
-            nomessageMessage(sender, clientID);
-            devNull = open("/dev/null", O_RDONLY);
         } else{
-            recieve(clientID, sender, line, shm);
+            if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
+                nomessageMessage(sender, clientID);
+                devNull = open("/dev/null", O_RDONLY);
+            } else{
+                recieve(clientID, sender, line, shm);
+            }
         }
     }
 
@@ -326,12 +326,13 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
                 close(cmd[0].fd[WRITE_END]);
                 close(cmd[0].fd[READ_END]);
             }
-        }
-        if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
-            nomessageMessage(sender, clientID);
-            devNull = open("/dev/null", O_RDONLY);
         } else{
-            recieve(clientID, sender, line, shm);
+            if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
+                nomessageMessage(sender, clientID);
+                devNull = open("/dev/null", O_RDONLY);
+            } else{
+                recieve(clientID, sender, line, shm);
+            }
         }
     }
 
