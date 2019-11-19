@@ -35,7 +35,6 @@ void messageHandler(int signo){
         if (shm->users[i].pid == getpid()){
             for (int j = 0; j < max_clients; ++j) {
                 if (strlen(shm->message[j][i]) > 0 ){
-                    //TODO: init : clear message
                     if (shm->users[j].ID != -1){
                         cout << shm->message[j][i];
                         fflush(stdout);
@@ -192,6 +191,13 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
     int devNull = -1;
 
     if (sender != -1) {
+        if (shm->users[sender].ID == -1){
+            nouserMessage(sender);
+            if (cmd[0].fd[READ_END]!=-1){
+                close(cmd[0].fd[WRITE_END]);
+                close(cmd[0].fd[READ_END]);
+            }
+        }
         if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
             nomessageMessage(sender, clientID);
             devNull = open("/dev/null", O_RDONLY);
@@ -294,12 +300,6 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             }
         }
     }
-    if (sender != -1) {
-        if (shm->users[sender].ID == -1) {
-            nouserMessage(sender);
-            return;
-        }
-    }
 
     if (symbol != userpipe){
         if (symbol != piped)
@@ -320,6 +320,13 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
     }
 
     if (sender != -1) {
+        if (shm->users[sender].ID == -1){
+            nouserMessage(sender);
+            if (cmd[0].fd[READ_END]!=-1){
+                close(cmd[0].fd[WRITE_END]);
+                close(cmd[0].fd[READ_END]);
+            }
+        }
         if (!checkPipeStatusMulti(sender, clientID, shm->pipe_status)){
             nomessageMessage(sender, clientID);
             devNull = open("/dev/null", O_RDONLY);
