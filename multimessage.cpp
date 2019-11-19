@@ -154,7 +154,7 @@ void nameMessage(int clientID, const char IP[], int port, const char name[], Sha
     }
 }
 void name(int clientID, const string &name, ShareMemory *shm){
-    if (duplicateUser(name, shm->users)){
+    if (duplicateUser(name.c_str(), shm->users)){
         duplicatNameMessage(name);
     } else{
         strcpy(shm->users[clientID].name, name.c_str());
