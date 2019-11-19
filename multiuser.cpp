@@ -10,13 +10,13 @@ void User::Init(const char IP1[], int ID1, int port1, pid_t pid1) {
     ID = ID1;
     port = port1;
     strcpy(IP, IP1);
-    strcpy(name, "\"(no name)\"");
+    strcpy(name, "(no name)");
     pid = pid1;
 }
 void User::Delete() {
     ID = -1;
     pid = -1;
-    strcpy(name, "\"(no name)\"");
+    strcpy(name, "(no name)");
 }
 User& User::operator=(const User &user) {
     ID = user.ID;

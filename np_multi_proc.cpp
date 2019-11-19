@@ -300,10 +300,6 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         }
     }
 
-    if (symbol == userpipe){
-        shm->pipe_status[clientID][receiver] = true;
-    }
-
     if (symbol != userpipe){
         if (symbol != piped)
             n = stoi(parsed.at(parsed.size()-1));
@@ -337,6 +333,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         send(clientID, receiver, line, shm);
         sprintf(filepath, "user_pipe/%d_%d", clientID, receiver);
         mkfifo(filepath, 0666);
+        shm->pipe_status[clientID][receiver] = true;
         kill(shm->users[receiver].pid, SIGUSR1);
         fifofd = open(filepath, O_WRONLY);
     }
