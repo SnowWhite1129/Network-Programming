@@ -44,7 +44,7 @@ void login(int newclient, ShareMemory *shm){
     }
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1){
-            loginMessage(shm->users[newclient].IP.c_str(), shm->users[newclient].port, shm, newclient, i);
+            loginMessage(shm->users[newclient].IP, shm->users[newclient].port, shm, newclient, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -56,7 +56,7 @@ void logout(int newclient, ShareMemory *shm){
     }
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID != -1){
-            logoutMessage(shm->users[newclient].name.c_str(), shm, newclient, i);
+            logoutMessage(shm->users[newclient].name, shm, newclient, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -71,8 +71,8 @@ void receiveMessage(const char receivername[], int receiverID, const char messag
 void recieve(int receiverID, int senderID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1) {
-            receiveMessage(shm->users[receiverID].name.c_str(), receiverID, message.c_str(),
-                           shm->users[senderID].name.c_str(), senderID, shm, i);
+            receiveMessage(shm->users[receiverID].name, receiverID, message.c_str(),
+                           shm->users[senderID].name, senderID, shm, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -86,8 +86,8 @@ void sendMessage(const char sendername[], int senderID, const char message[], co
 void send(int senderID, int receiverID, const string &message, ShareMemory *shm){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID!=-1) {
-            sendMessage(shm->users[senderID].name.c_str(), senderID, message.c_str(),
-                        shm->users[receiverID].name.c_str(), receiverID, shm, i);
+            sendMessage(shm->users[senderID].name, senderID, message.c_str(),
+                        shm->users[receiverID].name, receiverID, shm, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -104,7 +104,7 @@ void yell(int clientID, ShareMemory *shm, const char message[]){
     for (int i = 0; i < max_clients; ++i) {
         if (shm->users[i].ID != -1){
             strcpy(shm->message[clientID][i], message);
-            yellMessage(shm->users[clientID].name.c_str(), message, shm, clientID, i);
+            yellMessage(shm->users[clientID].name, message, shm, clientID, i);
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
@@ -123,12 +123,12 @@ void tell(int sender, int receiver, const char message[], ShareMemory *shm){
         line = line.substr(line.find(' ')+1);
         line = line.substr(line.find(' ')+1);
         strcpy(shm->message[sender][receiver], line.c_str());
-        toldMessage(shm->users[sender].name.c_str(), line.c_str(), shm, sender, receiver);
+        toldMessage(shm->users[sender].name, line.c_str(), shm, sender, receiver);
         kill(shm->users[receiver].pid, SIGUSR2);
     }
 }
 void userMessage(const User &user){
-    cout << user.ID+1 << "    " << user.name.c_str() << "    " << user.IP.c_str() << "    " << user.port;
+    cout << user.ID+1 << "    " << user.name << "    " << user.IP << "    " << user.port;
 }
 void whoMessage(int clientID, const User users[]){
     cout << "<ID>    <nickname>    <IP:port>    <indicate me>\n";
@@ -158,7 +158,7 @@ void name(int clientID, const string &name, ShareMemory *shm){
     if (duplicateUser(name, shm->users)){
         duplicatNameMessage(name);
     } else{
-        shm->users[clientID].name = name;
-        nameMessage(clientID, shm->users[clientID].IP.c_str(), shm->users[clientID].port, name.c_str(), shm);
+        strcpy(shm->users[clientID].name, name.c_str());
+        nameMessage(clientID, shm->users[clientID].IP, shm->users[clientID].port, name.c_str(), shm);
     }
 }

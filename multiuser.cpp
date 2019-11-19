@@ -4,31 +4,25 @@
 
 #include "multiuser.h"
 #include <iostream>
+#include <cstring>
 
-void User::Init(string IP1, int ID1, int port1) {
+void User::Init(const char IP1[], int ID1, int port1, pid_t pid1) {
     ID = ID1;
     port = port1;
-    IP = move(IP1);
-    name = "(no name)";
-    pid = -1;
-}
-void User::Init(string IP1, int ID1, int port1, pid_t pid1) {
-    ID = ID1;
-    port = port1;
-    IP = move(IP1);
-    name = "(no name)";
+    strcpy(IP, IP1);
+    strcpy(name, "\"(no name)\"");
     pid = pid1;
 }
 void User::Delete() {
     ID = -1;
     pid = -1;
-    name = "(no name)";
+    strcpy(name, "\"(no name)\"");
 }
 User& User::operator=(const User &user) {
     ID = user.ID;
     port = user.port;
-    IP = user.IP;
-    name = user.name;
+    strcpy(IP, user.IP);
+    strcpy(name, user.name);
     pid = user.pid;
 }
 int addUser(const User &client, User users[]){
