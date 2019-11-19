@@ -1,3 +1,4 @@
+
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +23,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+int n=0;
 command cmd[MAXLIST];
 
 using namespace std;
@@ -161,8 +163,8 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         shm->users[clientID].Delete();
         for (int i = 0; i < max_clients; ++i) {
             strcpy(shm->message[i][clientID], "");
-            strcpy(shm->message[clientID][i], "");
         }
+        --n;
         exit(0);
     } else if (parsed.at(0)== "setenv"){
         if(setenv(parsed.at(1).c_str(), parsed.at(2).c_str(), true)==-1){
@@ -173,7 +175,8 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         printenv(parsed.at(1));
         return;
     } else if (parsed.at(0) == "yell"){
-        yell(clientID, shm, line.c_str());
+        string message = line.substr(line.find(' ')+1);
+        yell(clientID, shm, message.c_str());
         return;
     } else if (parsed.at(0) == "who"){
         who(clientID, shm->users);
@@ -211,7 +214,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
             if (devNull == -1){
                 dup2(shm->pipe_fd[sender][clientID], STDIN_FILENO);
                 close(shm->pipe_fd[sender][clientID]);
-                shm -> pipe_status[sender][clientID] = false;
+                shm->pipe_status[sender][clientID] = false;
             } else{
                 //TODO: something wrong?
                 dup2(devNull, STDIN_FILENO);
@@ -254,7 +257,7 @@ void execArgs(vector <string> &parsed, Symbol symbol, int clientID, int sender, 
         }
         if (sender != -1){
             close(shm->pipe_fd[sender][clientID]);
-            while(shm -> pipe_status[sender][clientID]){
+            while(shm->pipe_status[sender][clientID]){
                 usleep(1000);
             }
             shm->pipe_fd[sender][clientID] = -1;
@@ -280,7 +283,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             return;
         } else{
             if (checkPipeStatusMulti(clientID, receiver, shm->pipe_status)){
-                //TODO checkPipeStatusMulti
+                //TODO problem
                 occuipiedMessage(clientID, receiver);
                 if (cmd[0].fd[READ_END]!=-1){
                     close(cmd[0].fd[WRITE_END]);
@@ -295,6 +298,10 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
             nouserMessage(sender);
             return;
         }
+    }
+
+    if (symbol == userpipe){
+        shm->pipe_status[clientID][receiver] = true;
     }
 
     if (symbol != userpipe){
@@ -330,7 +337,6 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         send(clientID, receiver, line, shm);
         sprintf(filepath, "user_pipe/%d_%d", clientID, receiver);
         mkfifo(filepath, 0666);
-        shm->pipe_status[clientID][receiver] = true;
         kill(shm->users[receiver].pid, SIGUSR1);
         fifofd = open(filepath, O_WRONLY);
     }
@@ -397,7 +403,7 @@ void execArgsPiped(vector <string> &parsed, Symbol symbol, int clientID, int sen
         }
         if (sender != -1){
             close(shm->pipe_fd[sender][clientID]);
-            while(shm -> pipe_status[sender][clientID]){
+            while(shm->pipe_status[sender][clientID]){
                 usleep(1000);
             }
             shm->pipe_fd[sender][clientID] = -1;
@@ -429,7 +435,7 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    int sockfd, connfd, n=0;
+    int sockfd, connfd;
     unsigned int len;
     struct sockaddr_in servaddr, cli;
 

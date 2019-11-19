@@ -38,7 +38,7 @@ void duplicatNameMessage(const string& name){
     cout <<  "*** User '" << name << "' already exists. ***\n";
 }
 void login(int newclient, ShareMemory *shm){
-    while(__sync_bool_compare_and_swap(&(shm -> userstatus), false, true)){
+    while(__sync_bool_compare_and_swap(&(shm->userstatus), false, true)){
         usleep(1000);
     }
     for (int i = 0; i < max_clients; ++i) {
@@ -47,7 +47,7 @@ void login(int newclient, ShareMemory *shm){
             kill(shm->users[i].pid, SIGUSR2);
         }
     }
-    shm -> userstatus = false;
+    shm->userstatus = false;
 }
 void logout(int newclient, ShareMemory *shm){
     while(__sync_bool_compare_and_swap(&(shm -> userstatus), false, true)){
