@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "user.h"
-#include "sharememory.h"
+
 using namespace std;
 void welcomeMessage(int fd);
 void loginMessage(const char IP[], int port, int fd);
@@ -28,7 +28,6 @@ void yell(int clientID, const string &message, const User users[]);
 void tell(int sender, int receiver, const string &message, const User users[]);
 void who(int clientID, const User users[]);
 void name(int clientID, const string &name, User users[]);
-
 
 #endif //NETWORK_PROGRAMMING_MESSAGE_H
 

@@ -4,7 +4,6 @@
 #include "multimessage.h"
 #include <sys/types.h>
 #include <signal.h>
-#include "message.h"
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
